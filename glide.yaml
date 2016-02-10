@@ -1,0 +1,3 @@
+package: github.com/arschles/goprox
+import:
+- package: github.com/gorilla/mux
