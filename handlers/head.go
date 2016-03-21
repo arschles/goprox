@@ -13,7 +13,7 @@ type Head struct {
 
 // ServeHTTP is the http.Handler interface implementation
 func (h *Head) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	http.Error(w, "not yet implemented", http.StatusNotImplemented)
 }
 
 // Register is the Handler interface implementation
