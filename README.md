@@ -21,4 +21,4 @@ Recent (as of this writing) events have proven that you can't rely on repositori
 
 If you have many developers or robots (such as CI tools) working on your codebase at a given time, an outage can slow or halt development because the developers or robots can't download the dependencies they need to build your codebase. Sometimes, in these cases, you have to wait until the repository is back up. Other times, you have to switch dependencies.
 
-`goprox` serves as a cache that is backed by an S3 bucket, which is highly available and controlled by you and only you.
+`goprox` is a server that you run and serves your dependencies from your S3 bucket. It is not a centralized Go package repository - you control the code it serves and the server itself.
