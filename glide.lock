@@ -1,6 +1,6 @@
 hash: bd6b11e227f80b11f638ee506653074b6a2f4ee84df01670d31537e66a830d5f
-updated: 2016-03-24T14:26:28.155547052-07:00
+updated: 2016-03-24T15:50:41.027942575-07:00
 imports:
 - name: github.com/arschles/go-git-http
-  version: 341680f0d3bcbd02319af3b11e9224f656d7ac93
+  version: ba2980867cd56643e3218fbc330d4c0ba8f3df13
 devImports: []
