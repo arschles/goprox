@@ -19,6 +19,6 @@ If you use a Go package management tool (like [glide](https://github.com/Masterm
 
 Recent (as of this writing) events have proven that you can't rely on repositories to always be available. [Google Code has shut down](http://google-opensource.blogspot.com/2015/03/farewell-to-google-code.html), and BitBucket and Github have outages sometimes, for example.
 
-If you have many developers or robots (such as CI tools) working on your codebase at a given time, eventually you will hit an outage of some kind, you won't be able to download one or more dependencies, and you'll hit a false negative build failure.
+If you have many developers or robots (such as CI tools) working on your codebase at a given time, an outage can slow or halt development because the developers or robots can't download the dependencies they need to build your codebase. Sometimes, in these cases, you have to wait until the repository is back up. Other times, you have to switch dependencies.
 
 `goprox` serves as a cache that is backed by an S3 bucket, which is highly available and controlled by you and only you.
