@@ -15,8 +15,8 @@ type primary struct {
 	head  http.Handler
 }
 
-// New returns the main handler responsible for directing traffic for the entire HTTP server
-func New(srvRoot string) http.Handler {
+// NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
+func NewWeb(srvRoot string) http.Handler {
 	return primary{goGet: goGet(srvRoot), head: head()}
 }
 

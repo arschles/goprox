@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,32 +14,56 @@ const (
 	resp                 = "d049f6c27a2244e12041955e262a404c7faba355	refs/heads/master"
 	contentTypeHeaderVal = "Content-Type"
 	contentType          = "text/plain; charset=utf-8"
-	port                 = 8080
+	servePort            = 8080
+	gitPort              = 8081
 )
+
+func buildServeMux(host string, port int) (string, http.Handler) {
+	m := http.NewServeMux()
+	hostStr := fmt.Sprintf("%s:%d", host, port)
+	m.Handle("/", handlers.NewWeb(hostStr))
+	return hostStr, m
+}
+
+func buildGitMux(host string, port int, tmpDir string) (string, http.Handler) {
+	m := http.NewServeMux()
+	hostStr := fmt.Sprintf("%s:%d", host, port)
+	gh := handlers.NewGit(hostStr, tmpDir)
+	m.Handle("/", gh)
+	return hostStr, m
+}
 
 func main() {
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
 	}
-	mux := http.NewServeMux()
-	hostStr := fmt.Sprintf("%s:%d", host, port)
-	mux.Handle("/", handlers.New(hostStr))
-	// router.Handle()
-	// router.HandleFunc("/{repo}/HEAD", func(w http.ResponseWriter, r *http.Request) {
-	// 	log.Printf("/abc.git/HEAD")
-	// 	w.Write([]byte("ref: refs/heads/master"))
-	// })
-	// router.HandleFunc("/abc.git/info/refs", func(w http.ResponseWriter, r *http.Request) {
-	// 	log.Printf("/abc.git/info/refs")
-	// 	w.Header().Set(contentTypeHeaderVal, contentType)
-	// 	w.Write([]byte(resp))
-	// })
-	// router.HandleFunc("/objects/d0/49f6c27a2244e12041955e262a404c7faba355", func(w http.ResponseWriter, r *http.Request) {
-	// 	log.Printf("/objects/d0/49f6c27a2244e12041955e262a404c7faba355")
-	// 	obj := git.NewObject(git.ObjectBlob, "this is stuff!")
-	// 	w.Write(obj.Bytes())
-	// })
-	log.Printf("hosting on %s", hostStr)
-	http.ListenAndServe(hostStr, mux)
+	tmpDir, err := ioutil.TempDir("", "/goprox/")
+	if err != nil {
+		log.Printf("Error creating temp dir (%s)", err)
+		os.Exit(1)
+	}
+
+	defer os.RemoveAll(tmpDir)
+
+	srvCh := make(chan error)
+	gitCh := make(chan error)
+	go func() {
+		hostStr, mux := buildServeMux(host, servePort)
+		log.Printf("Serving web on %s", hostStr)
+		srvCh <- http.ListenAndServe(hostStr, mux)
+	}()
+	go func() {
+		hostStr, mux := buildGitMux(host, gitPort, tmpDir)
+		log.Printf("Serving git on %s", hostStr)
+		gitCh <- http.ListenAndServe(hostStr, mux)
+	}()
+	select {
+	case err := <-srvCh:
+		log.Printf("Error serving web (%s)", err)
+		os.Exit(1)
+	case err := <-gitCh:
+		log.Printf("Error serving git (%s)", err)
+		os.Exit(1)
+	}
 }
