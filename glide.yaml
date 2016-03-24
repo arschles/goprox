@@ -1,2 +1,5 @@
 package: github.com/arschles/goprox
-import: []
+import:
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh
