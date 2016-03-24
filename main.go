@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/arschles/goprox/handlers"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -17,11 +17,13 @@ const (
 )
 
 func main() {
-	router := mux.NewRouter()
-
-	headHandler := &handlers.Head{}
-	goGetHandler := &handlers.GoGet{}
-	handlers.Register(router, headHandler, goGetHandler)
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	mux := http.NewServeMux()
+	hostStr := fmt.Sprintf("%s:%d", host, port)
+	mux.Handle("/", handlers.New(hostStr))
 	// router.Handle()
 	// router.HandleFunc("/{repo}/HEAD", func(w http.ResponseWriter, r *http.Request) {
 	// 	log.Printf("/abc.git/HEAD")
@@ -37,7 +39,6 @@ func main() {
 	// 	obj := git.NewObject(git.ObjectBlob, "this is stuff!")
 	// 	w.Write(obj.Bytes())
 	// })
-	hostStr := fmt.Sprintf(":%d", port)
 	log.Printf("hosting on %s", hostStr)
-	http.ListenAndServe(hostStr, router)
+	http.ListenAndServe(hostStr, mux)
 }
