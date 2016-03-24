@@ -70,11 +70,12 @@ func Run(port int) error {
 		}
 
 		// form a standard TCP connection to an encrypted SSH connection
-		sshConn, _, _, err := ssh.NewServerConn(conn, &config)
+		sshConn, chans, reqs, err := ssh.NewServerConn(conn, &config)
 		if err != nil {
 			log.Printf("Error creating new SSH conn (%s)", err)
 			continue
 		}
+		go ssh.DiscardRequests(reqs)
 
 		log.Println("Connection from", sshConn.RemoteAddr())
 		sshConn.Close()
