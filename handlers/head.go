@@ -1,11 +1,13 @@
 package handlers
 
-type Head struct {
-}
+import (
+	"net/http"
+)
 
-func (h *Head) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-}
-func (h *Head) PathInfo() (string, string) {
-	return "GET", "/{repo}/HEAD"
+// Head is a Handler that allows a user to determine whether a package is currently in the cache.
+// it is a Handler implementation
+func head() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "not yet implemented", http.StatusNotImplemented)
+	})
 }
