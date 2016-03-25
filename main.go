@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,26 +10,21 @@ import (
 )
 
 const (
-	resp                 = "d049f6c27a2244e12041955e262a404c7faba355	refs/heads/master"
-	contentTypeHeaderVal = "Content-Type"
-	contentType          = "text/plain; charset=utf-8"
-	servePort            = 8080
-	gitPort              = 8081
+	servePort = 8080
+	gitPort   = 8081
 )
 
 func buildServeMux(host string, port int) (string, http.Handler) {
 	m := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
-	m.Handle("/", handlers.NewWeb(hostStr))
+	m.Handle("/*", handlers.NewWeb(hostStr))
 	return hostStr, m
 }
 
 func buildGitMux(host string, port int, tmpDir string) (string, http.Handler) {
-	m := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
 	gh := handlers.NewGit(hostStr, tmpDir)
-	m.Handle("/", gh)
-	return hostStr, m
+	return hostStr, gh
 }
 
 func main() {
@@ -38,12 +32,11 @@ func main() {
 	if host == "" {
 		host = "localhost"
 	}
-	tmpDir, err := ioutil.TempDir("", "/goprox/")
-	if err != nil {
-		log.Printf("Error creating temp dir (%s)", err)
-		os.Exit(1)
-	}
 
+	tmpDir, err := createTempDir()
+	if err != nil {
+		log.Fatalf("Error creating temp dir (%s)", err)
+	}
 	defer os.RemoveAll(tmpDir)
 
 	srvCh := make(chan error)

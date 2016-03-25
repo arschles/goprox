@@ -50,12 +50,12 @@ func (r *RpcReader) scan(data []byte) {
 		// When we get here, we're done collecting all pkt-lines successfully
 		// and can now extract relevant events.
 		switch r.Rpc {
-		case "receive-pack":
+		case receivePack:
 			for _, line := range r.pktLineParser.Lines {
 				events := scanPush(line)
 				r.Events = append(r.Events, events...)
 			}
-		case "upload-pack":
+		case uploadPack:
 			total := strings.Join(r.pktLineParser.Lines, "")
 			events := scanFetch(total)
 			r.Events = append(r.Events, events...)

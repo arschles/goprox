@@ -34,7 +34,7 @@ func NewGit(hostStr, tmpDir string) http.Handler {
 			log.Printf("error cloning (%s)", err)
 			return err
 		}
-		log.Printf("done")
+		log.Printf("done filling %s", repoName)
 		// TODO: do caching here. see https://github.com/arschles/goprox/issues/3
 		return nil
 	}
