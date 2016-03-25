@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/arschles/goprox/handlers"
+	"github.com/arschles/goprox/ssh"
 )
 
 const (
@@ -21,8 +22,10 @@ func main() {
 	if host == "" {
 		host = "localhost"
 	}
-	mux := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
+	sshPort := 2222
+
+	mux := http.NewServeMux()
 	mux.Handle("/", handlers.New(hostStr))
 	// router.Handle()
 	// router.HandleFunc("/{repo}/HEAD", func(w http.ResponseWriter, r *http.Request) {
@@ -40,5 +43,21 @@ func main() {
 	// 	w.Write(obj.Bytes())
 	// })
 	log.Printf("hosting on %s", hostStr)
-	http.ListenAndServe(hostStr, mux)
+	httpCh := make(chan error)
+	go func() {
+		httpCh <- http.ListenAndServe(hostStr, mux)
+	}()
+	sshCh := make(chan error)
+	go func() {
+		sshCh <- ssh.Run(sshPort)
+	}()
+
+	select {
+	case err := <-httpCh:
+		log.Printf("Error serving on HTTP (%s)", err)
+		os.Exit(1)
+	case err := <-sshCh:
+		log.Printf("Error serving SSH (%s)", err)
+		os.Exit(1)
+	}
 }
