@@ -12,7 +12,7 @@ type goGetTplData struct {
 	RepoRoot     string
 }
 
-func goGet(srvRoot string) http.Handler {
+func goGet(gitSrvScheme string, gitSrvPort int, srvRoot string) http.Handler {
 	tpl := template.Must(template.New("").Parse(`<html>
 <head><meta name="go-import" content="{{.ImportPrefix}} git {{.RepoRoot}}"/></head>
 <body></body>
@@ -22,7 +22,7 @@ func goGet(srvRoot string) http.Handler {
 		importPrefix := r.URL.Path[1:]
 		data := goGetTplData{
 			ImportPrefix: importPrefix,
-			RepoRoot:     fmt.Sprintf("https://%s/%s", srvRoot, importPrefix),
+			RepoRoot:     fmt.Sprintf("%s://%s:%d/%s", gitSrvScheme, srvRoot, gitSrvPort, importPrefix),
 		}
 		if err := tpl.Execute(w, data); err != nil {
 			log.Printf("Error executing template (%s)", err)
