@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	githttp "github.com/arschles/go-git-http"
+	"github.com/arschles/goprox/githttp"
 )
 
 // NewGit returns the handler to be used for the Git server
