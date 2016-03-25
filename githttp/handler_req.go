@@ -1,6 +1,7 @@
 package githttp
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -11,4 +12,8 @@ type HandlerReq struct {
 	RPC  string
 	Dir  string
 	File string
+}
+
+func (hr HandlerReq) String() string {
+	return fmt.Sprintf("RPC = %s, Dir = %s, File = %s", hr.RPC, hr.Dir, hr.File)
 }

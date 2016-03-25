@@ -28,8 +28,8 @@ type Service struct {
 
 func services(g *GitHTTP) map[*regexp.Regexp]Service {
 	return map[*regexp.Regexp]Service{
-		rpcUploadPath:         Service{"POST", g.serviceRpc, uploadPack},
-		rpcReceivePath:        Service{"POST", g.serviceRpc, receivePack},
+		rpcUploadPath:         Service{"POST", g.serviceRPC, uploadPack},
+		rpcReceivePath:        Service{"POST", g.serviceRPC, receivePack},
 		getInfoRefsPath:       Service{"GET", g.getInfoRefs, ""},
 		getHeadPath:           Service{"GET", g.getTextFile, ""},
 		getAlternatesPath:     Service{"GET", g.getTextFile, ""},

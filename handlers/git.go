@@ -16,7 +16,6 @@ func NewGit(hostStr, tmpDir string) http.Handler {
 	hdl := githttp.New(tmpDir)
 	// hdl.UploadPack = false
 	hdl.FillRepo = func(repoDir string) error {
-		log.Printf("fill repo %s", repoDir)
 		if !strings.HasPrefix(repoDir, tmpDir) {
 			return fmt.Errorf("invalid repoDir in FillRepo (%s)", repoDir)
 		}
@@ -25,7 +24,7 @@ func NewGit(hostStr, tmpDir string) http.Handler {
 			log.Printf("error creating %s (%s)", repoDir, err)
 			return err
 		}
-		cmd := exec.Command("git", "clone", fmt.Sprintf("https://%s", repoName))
+		cmd := exec.Command("git", "clone", fmt.Sprintf("https://%s", repoName), repoDir)
 		cmd.Dir = repoDir
 		log.Printf("executing %s in %s", strings.Join(cmd.Args, " "), cmd.Dir)
 		cmd.Stdout = os.Stdout

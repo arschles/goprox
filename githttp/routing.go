@@ -1,14 +1,13 @@
 package githttp
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"strings"
 )
 
 // Request handling function
-func (g *GitHTTP) requestHandler(w http.ResponseWriter, r *http.Request) {
+func requestHandler(g *GitHTTP, w http.ResponseWriter, r *http.Request) {
 	// Get service for URL
 	repo, service := getServiceForPath(g, r.URL.Path)
 
@@ -35,7 +34,6 @@ func (g *GitHTTP) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Repo not found on disk
 	if err != nil {
-		log.Printf("not found (%s)", err)
 		renderNotFound(w)
 		return
 	}

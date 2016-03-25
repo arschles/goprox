@@ -3,7 +3,6 @@ package githttp
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -38,8 +37,7 @@ type GitHTTP struct {
 
 // Implement the http.Handler interface
 func (g *GitHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Git HTTP Handler: %s", r.URL)
-	g.requestHandler(w, r)
+	requestHandler(g, w, r)
 	return
 }
 
@@ -65,14 +63,12 @@ func (g *GitHTTP) Init() (*GitHTTP, error) {
 func (g *GitHTTP) event(e Event) {
 	if g.EventHandler != nil {
 		g.EventHandler(e)
-	} else {
-		log.Printf("Event: %+v", e)
 	}
 }
 
 // Actual command handling functions
 
-func (g *GitHTTP) serviceRpc(hr HandlerReq) error {
+func (g *GitHTTP) serviceRPC(hr HandlerReq) error {
 	access, err := g.hasAccess(hr.r, hr.Dir, hr.RPC, true)
 	if err != nil {
 		return err
@@ -152,32 +148,29 @@ func (g *GitHTTP) serviceRpc(hr HandlerReq) error {
 }
 
 func (g *GitHTTP) getInfoRefs(hr HandlerReq) error {
-	log.Printf("%s", hr.r.URL)
-	w, r, dir := hr.w, hr.r, hr.Dir
-	serviceName := getServiceType(r)
-	access, err := g.hasAccess(r, dir, serviceName, false)
+	serviceName := getServiceType(hr.r)
+	access, err := g.hasAccess(hr.r, hr.Dir, serviceName, false)
 	if err != nil {
 		return err
 	}
 
 	if !access {
-		g.updateServerInfo(dir)
-		hdrNocache(w)
+		g.updateServerInfo(hr.Dir)
+		hdrNocache(hr.w)
 		return sendFile("text/plain; charset=utf-8", hr)
 	}
 
-	args := []string{serviceName, "--stateless-rpc", "--advertise-refs", "."}
-	refs, err := g.gitCommand(dir, args...)
+	refs, err := g.gitCommand(hr.Dir, serviceName, "--stateless-rpc", "--advertise-refs", hr.Dir)
 	if err != nil {
 		return err
 	}
 
-	hdrNocache(w)
-	w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", serviceName))
-	w.WriteHeader(http.StatusOK)
-	w.Write(packetWrite("# service=git-" + serviceName + "\n"))
-	w.Write(packetFlush())
-	w.Write(refs)
+	hdrNocache(hr.w)
+	hr.w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", serviceName))
+	hr.w.WriteHeader(http.StatusOK)
+	hr.w.Write(packetWrite("# service=git-" + serviceName + "\n"))
+	hr.w.Write(packetFlush())
+	hr.w.Write(refs)
 
 	return nil
 }
@@ -240,9 +233,8 @@ func (g *GitHTTP) getGitDir(filePath string) (string, error) {
 	}
 
 	f := path.Join(root, filePath)
-	log.Printf("checking git dir %s", f)
 	_, statErr := os.Stat(f)
-	if !os.IsNotExist(statErr) {
+	if statErr != nil && !os.IsNotExist(statErr) {
 		return "", statErr
 	}
 	if statErr != nil && g.FillRepo == nil {
@@ -250,7 +242,6 @@ func (g *GitHTTP) getGitDir(filePath string) (string, error) {
 	}
 	if statErr != nil {
 		if err := g.FillRepo(f); err != nil {
-			log.Printf("FillRepo run with error (%s)", err)
 			return "", err
 		}
 	}
@@ -291,8 +282,8 @@ func (g *GitHTTP) getConfigSetting(service_name string, dir string) (bool, error
 	return setting == "true", nil
 }
 
-func (g *GitHTTP) getGitConfig(config_name string, dir string) (string, error) {
-	args := []string{"config", config_name}
+func (g *GitHTTP) getGitConfig(configName string, dir string) (string, error) {
+	args := []string{"config", configName}
 	out, err := g.gitCommand(dir, args...)
 	if err != nil {
 		return "", err
@@ -308,6 +299,9 @@ func (g *GitHTTP) updateServerInfo(dir string) ([]byte, error) {
 func (g *GitHTTP) gitCommand(dir string, args ...string) ([]byte, error) {
 	command := exec.Command(g.GitBinPath, args...)
 	command.Dir = dir
-
-	return command.Output()
+	out, err := command.CombinedOutput()
+	if err != nil {
+		return nil, newCmdErr(command, out, err)
+	}
+	return out, nil
 }
