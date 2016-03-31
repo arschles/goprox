@@ -12,12 +12,13 @@ import (
 const (
 	servePort = 8080
 	gitPort   = 8081
+	gitScheme = "http"
 )
 
 func buildServeMux(host string, port int) (string, http.Handler) {
 	m := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
-	m.Handle("/", handlers.NewWeb(hostStr))
+	m.Handle("/", handlers.NewWeb(gitScheme, gitPort, host))
 	return hostStr, m
 }
 
