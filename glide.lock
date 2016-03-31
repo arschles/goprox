@@ -1,4 +1,6 @@
-hash: 9c3f5646272bae5f41591e16ce61868bd44a5d5ff9d4577f39d991860d086ce6
-updated: 2016-03-25T14:22:42.237769941-07:00
-imports: []
+hash: 04c6ac3bc12d7f58514dbac463a3b5d8c2b37d70f47548f3b11a2ec9cdc92a7c
+updated: 2016-03-31T15:27:56.495415012-07:00
+imports:
+- name: github.com/minio/minio-go
+  version: 22699a12272b9c83356ec30225efa66c3939b60e
 devImports: []

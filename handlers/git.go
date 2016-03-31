@@ -9,10 +9,11 @@ import (
 	"strings"
 
 	"github.com/arschles/goprox/githttp"
+	s3 "github.com/minio/minio-go"
 )
 
 // NewGit returns the handler to be used for the Git server
-func NewGit(tmpDir string) http.Handler {
+func NewGit(hostStr, tmpDir string, s3Client *s3.Client) http.Handler {
 	hdl := githttp.New(tmpDir)
 	// hdl.UploadPack = false
 	hdl.FillRepo = func(repoDir string) error {
