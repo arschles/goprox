@@ -18,7 +18,7 @@ const (
 func buildServeMux(host string, port int) (string, http.Handler) {
 	m := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
-	m.Handle("/", handlers.NewWeb(gitScheme, gitPort, host))
+	m.Handle("/", handlers.NewWeb(servePort, gitScheme, gitPort))
 	return hostStr, m
 }
 
