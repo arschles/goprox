@@ -8,8 +8,8 @@ import (
 type S3 struct {
 	Endpoint string `envconfig:"AWS_ENDPOINT" default:"s3.amazonaws.com"`
 	Bucket   string `envconfig:"AWS_BUCKET" default:"goprox"`
-	Key      string `envconfig:"AWS_KEY"`
-	Secret   string `envconfig:"AWS_SECRET"`
+	Key      string `envconfig:"AWS_KEY" required:"true"`
+	Secret   string `envconfig:"AWS_SECRET" required:"true"`
 }
 
 // GetS3 gets the S3 config using envconfig
