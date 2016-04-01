@@ -35,25 +35,41 @@ func NewGit(s3Client *s3.Client, bucketName, tmpDir string) http.Handler {
 		if !strings.HasPrefix(repoDir, tmpDir) {
 			return fmt.Errorf("invalid repoDir in FillRepo (%s)", repoDir)
 		}
-		repoName := repoDir[len(tmpDir)+1:]
+		packageName := repoDir[len(tmpDir)+1:]
 		if err := os.MkdirAll(repoDir, os.ModePerm); err != nil {
 			log.Printf("error creating %s (%s)", repoDir, err)
 			return err
 		}
-		storedPkgName := strings.Replace(repoName, "/", "-", -1)
-		pkgStream, err := storage.GetStreamForPackage(s3Client, bucketName, storedPkgName)
+		defer func() {
+			if err := os.RemoveAll(repoDir); err != nil {
+				log.Printf("Error removing repository for %s in %s (%s)", packageName, repoDir, err)
+			}
+		}()
+
+		objInfo, err := storage.PackageExists(s3Client, bucketName, packageName)
+		needsDownload := true
 		if err != nil {
-			return err
+			if err := gitClone(packageName, repoDir); err != nil {
+				log.Printf("Error git cloning %s (%s)", packageName, err)
+				return err
+			}
+			if err := storage.UploadPackage(s3Client, bucketName, packageName, repoDir); err != nil {
+				log.Printf("Error uploading package %s from %s (%s)", packageName, repoDir, err)
+			}
+			needsDownload = false
 		}
 
-		if err := storage.WriteStreamToDisk(pkgStream, repoDir); err != nil {
-			return err
+		if needsDownload {
+			obj, err := s3Client.GetObject(bucketName, objInfo.Key)
+			if err != nil {
+				log.Printf("Error downloading %s from bucket %s (%s)", objInfo.Key, bucketName, err)
+				return err
+			}
+			if err := storage.UntarObjectToDisk(obj, repoDir); err != nil {
+				log.Printf("Error untarring %s to %s (%s)", objInfo.Key, repoDir, err)
+				return err
+			}
 		}
-
-		if err := gitClone(repoName, repoDir); err != nil {
-			return err
-		}
-		// TODO: do caching here. see https://github.com/arschles/goprox/issues/3
 		return nil
 	}
 	return hdl
