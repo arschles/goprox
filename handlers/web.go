@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -16,16 +17,18 @@ type primary struct {
 }
 
 // NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
-func NewWeb(srvScheme string, srvPort int, srvRoot string) http.Handler {
-	return primary{goGet: goGet(srvScheme, srvPort, srvRoot), head: head()}
+func NewWeb(webPort int, gitScheme string, gitPort int) http.Handler {
+	return primary{goGet: goGet(webPort, gitScheme, gitPort), head: head()}
 }
 
 func (m primary) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s", r.URL)
 	if r.Method == headMethod {
+		log.Printf(r.Method)
 		m.head.ServeHTTP(w, r)
 		return
-	}
-	if r.URL.Query().Get(goGetQueryKey) == "1" && r.Method == getMethod {
+	} else if r.Method == getMethod && r.URL.Query().Get(goGetQueryKey) == "1" {
+		log.Printf("GET with go-get=1")
 		m.goGet.ServeHTTP(w, r)
 		return
 	}
