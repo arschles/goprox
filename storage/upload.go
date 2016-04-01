@@ -28,13 +28,22 @@ func getWalkFunc(baseDir string, files *[]string) filepath.WalkFunc {
 	}
 }
 
-// UploadPackage uploads all files in dir to the correct location under bucketName for packageName
-func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
-	// get all files from dir
+// get a list of relative paths of all files under dir
+func getFiles(dir string) ([]string, error) {
 	files := []string{}
 	if err := filepath.Walk(dir, getWalkFunc(dir, &files)); err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+// UploadPackage uploads all files in dir to the correct location under bucketName for packageName
+func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
+	files, err := getFiles(dir)
+	if err != nil {
 		return err
 	}
+
 	// write all files to the tar writer
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
