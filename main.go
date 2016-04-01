@@ -24,6 +24,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting web config (%s)", err)
 	}
+	s3Conf, err := config.GetS3(appName)
+	if err != nil {
+		log.Fatalf("Error getting S3 config (%s)", err)
+	}
 
 	tmpDir, err := createTempDir()
 	if err != nil {
@@ -31,7 +35,7 @@ func main() {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	s3Client, err := s3.New(s3Conf.AWSEndpoint, s3Conf.AWSKey, s3Conf.AWSSecret, false)
+	s3Client, err := s3.New(s3Conf.Endpoint, s3Conf.Key, s3Conf.Secret, false)
 	if err != nil {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
@@ -47,7 +51,7 @@ func main() {
 	go func() {
 		hostStr := fmt.Sprintf("%s:%d", gitConf.BindHost, gitConf.BindPort)
 		log.Printf("Serving git on %s", hostStr)
-		handler := handlers.NewGit(s3Client, s3Conf.BucketName, tmpDir)
+		handler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
 		gitCh <- http.ListenAndServe(hostStr, handler)
 	}()
 	select {
