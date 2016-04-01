@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"archive/tar"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,13 @@ import (
 )
 
 var (
-	goPath string
+	goPath           string
+	testDataDirFiles = []string{
+		"dir1/file1",
+		"dir2/dir1/dir1/file1",
+		"dir2/dir1/dir1/dir1/file1",
+		"file1",
+	}
 )
 
 func init() {
@@ -21,18 +28,20 @@ func init() {
 	}
 }
 
-func TestGetFiles(t *testing.T) {
+func getTestDataDir() (string, error) {
 	dir, err := filepath.Abs(fmt.Sprintf("%s/src/github.com/arschles/goprox/testdata", goPath))
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+func TestGetFiles(t *testing.T) {
+	dir, err := getTestDataDir()
 	assert.NoErr(t, err)
 	files, err := getFiles(dir)
 	assert.NoErr(t, err)
-	log.Printf("found files %s", files)
-	expected := []string{
-		"dir1/file1",
-		"dir2/dir1/dir1/file1",
-		"dir2/dir1/dir1/dir1/file1",
-		"file1",
-	}
+	expected := testDataDirFiles
 	set := map[string]struct{}{}
 	for _, file := range files {
 		set[file] = struct{}{}
@@ -41,4 +50,12 @@ func TestGetFiles(t *testing.T) {
 		_, ok := set[ex]
 		assert.True(t, ok, "file %s was not found", ex)
 	}
+}
+
+func TestTarFiles(t *testing.T) {
+	// dir, err := getTestDataDir()
+	// assert.NoErr(t, err)
+	// rdr, err := tarFiles(dir, testDataDirFiles)
+	// assert.NoErr(t, err)
+
 }

@@ -3,6 +3,7 @@ package storage
 import (
 	"archive/tar"
 	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,6 +38,30 @@ func getFiles(dir string) ([]string, error) {
 	return files, nil
 }
 
+// tarFiles produces a tarball of all files. It reads each file that lives under prefix and stores it in the tarball as the path in the slice
+func tarFiles(prefix string, files []string) (io.Reader, error) {
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	for _, file := range files {
+		fileBytes, err := ioutil.ReadFile(filepath.Join(prefix, file))
+		if err != nil {
+			return nil, err
+		}
+		hdr := &tar.Header{Name: file, Mode: int64(os.ModePerm), Size: int64(len(fileBytes))}
+		if err := tw.WriteHeader(hdr); err != nil {
+			return nil, err
+		}
+		if _, err := tw.Write(fileBytes); err != nil {
+			return nil, err
+		}
+	}
+	if err := tw.Close(); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
 // UploadPackage uploads all files in dir to the correct location under bucketName for packageName
 func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
 	files, err := getFiles(dir)
@@ -44,23 +69,8 @@ func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
 		return err
 	}
 
-	// write all files to the tar writer
-	buf := new(bytes.Buffer)
-	tw := tar.NewWriter(buf)
-	for _, file := range files {
-		fileBytes, err := ioutil.ReadFile(file)
-		if err != nil {
-			return err
-		}
-		hdr := &tar.Header{Name: file, Mode: int64(os.ModePerm), Size: int64(len(fileBytes))}
-		if err := tw.WriteHeader(hdr); err != nil {
-			return err
-		}
-		if _, err := tw.Write(fileBytes); err != nil {
-			return err
-		}
-	}
-	if err := tw.Close(); err != nil {
+	buf, err := tarFiles(dir, files)
+	if err != nil {
 		return err
 	}
 

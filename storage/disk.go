@@ -5,12 +5,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	s3 "github.com/minio/minio-go"
 )
 
-// UntarObjectToDisk untars the object at obj to repoDir on disk. Assumes that repoDir already exists, and returns any errors along the way
-func UntarObjectToDisk(obj *s3.Object, repoDir string) error {
+// UntarTarToDisk untars the tarball contained in obj to repoDir on disk. Assumes that repoDir already exists, and returns any errors along the way
+func UntarTarToDisk(obj io.Reader, repoDir string) error {
 	tr := tar.NewReader(obj)
 	for {
 		hdr, err := tr.Next()
