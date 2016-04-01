@@ -29,11 +29,11 @@ func getPackage(u *url.URL) string {
 	return u.Path[1:]
 }
 
-func goGet(gitScheme, gitHost string, gitPort int) http.Handler {
+func goGet(webHost string, webPort int, gitScheme, gitHost string, gitPort int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pkg := getPackage(r.URL)
 		data := goGetTplData{
-			ImportPrefix: getPackage(r.URL),
+			ImportPrefix: fmt.Sprintf("%s:%d/%s", webHost, webPort, pkg),
 			RepoRoot:     fmt.Sprintf("%s://%s:%d/%s", gitScheme, gitHost, gitPort, pkg),
 		}
 		log.Printf("template data = %+v", data)
