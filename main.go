@@ -10,15 +10,14 @@ import (
 )
 
 const (
-	servePort = 8080
-	gitPort   = 8081
 	gitScheme = "http"
+	appName   = "goprox"
 )
 
-func buildServeMux(host string, port int) (string, http.Handler) {
+func buildServeMux(host string, port, gitPort int) (string, http.Handler) {
 	m := http.NewServeMux()
 	hostStr := fmt.Sprintf("%s:%d", host, port)
-	m.Handle("/", handlers.NewWeb(servePort, gitScheme, gitPort))
+	m.Handle("/", handlers.NewWeb(port, gitScheme, gitPort))
 	return hostStr, m
 }
 
@@ -29,10 +28,14 @@ func buildGitMux(host string, port int, tmpDir string) (string, http.Handler) {
 }
 
 func main() {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "localhost"
+
+	conf, err := getConfig("goprox")
+	if err != nil {
+		log.Fatalf("Error getting config (%s)", err)
 	}
+	host := conf.BindHost
+	servePort := conf.WebPort
+	gitPort := conf.GitPort
 
 	tmpDir, err := createTempDir()
 	if err != nil {
@@ -43,7 +46,7 @@ func main() {
 	srvCh := make(chan error)
 	gitCh := make(chan error)
 	go func() {
-		hostStr, mux := buildServeMux(host, servePort)
+		hostStr, mux := buildServeMux(host, servePort, gitPort)
 		log.Printf("Serving web on %s", hostStr)
 		srvCh <- http.ListenAndServe(hostStr, mux)
 	}()
