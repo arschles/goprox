@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/arschles/goprox/config"
 	"github.com/arschles/goprox/handlers"
 )
 
@@ -13,25 +14,17 @@ const (
 	servePort = 8080
 	gitPort   = 8081
 	gitScheme = "http"
+	appName   = "goprox"
 )
 
-func buildServeMux(host string, port int) (string, http.Handler) {
-	m := http.NewServeMux()
-	hostStr := fmt.Sprintf("%s:%d", host, port)
-	m.Handle("/", handlers.NewWeb(servePort, gitScheme, gitPort))
-	return hostStr, m
-}
-
-func buildGitMux(host string, port int, tmpDir string) (string, http.Handler) {
-	hostStr := fmt.Sprintf("%s:%d", host, port)
-	gh := handlers.NewGit(hostStr, tmpDir)
-	return hostStr, gh
-}
-
 func main() {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "localhost"
+	gitConf, err := config.GetGitServer(appName)
+	if err != nil {
+		log.Fatalf("Error getting git config (%s)", err)
+	}
+	webConf, err := config.GetWebServer(appName)
+	if err != nil {
+		log.Fatalf("Error getting web config (%s)", err)
 	}
 
 	tmpDir, err := createTempDir()
@@ -43,14 +36,16 @@ func main() {
 	srvCh := make(chan error)
 	gitCh := make(chan error)
 	go func() {
-		hostStr, mux := buildServeMux(host, servePort)
+		hostStr := fmt.Sprintf("%s:%d", webConf.BindHost, webConf.BindPort)
+		handler := handlers.NewWeb(webConf, gitConf)
 		log.Printf("Serving web on %s", hostStr)
-		srvCh <- http.ListenAndServe(hostStr, mux)
+		srvCh <- http.ListenAndServe(hostStr, handler)
 	}()
 	go func() {
-		hostStr, mux := buildGitMux(host, gitPort, tmpDir)
+		hostStr := fmt.Sprintf("%s:%d", gitConf.BindHost, gitConf.BindPort)
 		log.Printf("Serving git on %s", hostStr)
-		gitCh <- http.ListenAndServe(hostStr, mux)
+		handler := handlers.NewGit(tmpDir)
+		gitCh <- http.ListenAndServe(hostStr, handler)
 	}()
 	select {
 	case err := <-srvCh:

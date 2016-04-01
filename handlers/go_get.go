@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -24,15 +25,16 @@ var (
 `))
 )
 
-func goGet(webPort int, gitScheme string, gitPort int) http.Handler {
+func getPackage(u *url.URL) string {
+	return u.Path[1:]
+}
+
+func goGet(webHost string, webPort int, gitScheme, gitHost string, gitPort int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		importPrefix := r.URL.Path[1:]
-		log.Printf("go-get import prefix = %s", importPrefix)
-		host := r.URL.Host
+		pkg := getPackage(r.URL)
 		data := goGetTplData{
-			// ImportPrefix: importPrefix,
-			ImportPrefix: fmt.Sprintf("%s:%d/%s", host, webPort, importPrefix),
-			RepoRoot:     fmt.Sprintf("%s://%s:%d/%s", gitScheme, host, gitPort, importPrefix),
+			ImportPrefix: fmt.Sprintf("%s:%d/%s", webHost, webPort, pkg),
+			RepoRoot:     fmt.Sprintf("%s://%s:%d/%s", gitScheme, gitHost, gitPort, pkg),
 		}
 		log.Printf("template data = %+v", data)
 		out := io.MultiWriter(w, os.Stdout)

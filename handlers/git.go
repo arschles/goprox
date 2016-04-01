@@ -12,7 +12,7 @@ import (
 )
 
 // NewGit returns the handler to be used for the Git server
-func NewGit(hostStr, tmpDir string) http.Handler {
+func NewGit(tmpDir string) http.Handler {
 	hdl := githttp.New(tmpDir)
 	// hdl.UploadPack = false
 	hdl.FillRepo = func(repoDir string) error {
