@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/arschles/goprox/repo"
 )
 
 type goGetTplData struct {
@@ -24,15 +26,19 @@ var (
 `))
 )
 
-func goGet(webPort int, gitScheme string, gitPort int) http.Handler {
+func goGet(webHost string, webPort int, gitScheme, gitHost string, gitPort int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		importPrefix := r.URL.Path[1:]
-		log.Printf("go-get import prefix = %s", importPrefix)
-		host := r.URL.Host
+		log.Printf("host = %s", r.URL.Host)
+		repoInfo, err := repo.InfoFromURL(r.URL)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("go-get import prefix = %s", repoInfo.ImportPrefix())
 		data := goGetTplData{
-			// ImportPrefix: importPrefix,
-			ImportPrefix: fmt.Sprintf("%s:%d/%s", host, webPort, importPrefix),
-			RepoRoot:     fmt.Sprintf("%s://%s:%d/%s", gitScheme, host, gitPort, importPrefix),
+			ImportPrefix: repoInfo.ImportPrefix(),
+			RepoRoot:     fmt.Sprintf("%s://%s/%s", gitScheme, r.URL.Host, repoInfo.Package()),
 		}
 		log.Printf("template data = %+v", data)
 		out := io.MultiWriter(w, os.Stdout)
