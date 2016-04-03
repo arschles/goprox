@@ -1,9 +1,6 @@
 package storage
 
 import (
-	"archive/tar"
-	"bytes"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,40 +11,21 @@ import (
 )
 
 func TestUntarToDisk(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "goproxtest")
+	tmpDir, err := tests.CreateTempDir()
 	assert.NoErr(t, err)
 	defer func() {
 		if rerr := os.RemoveAll(tmpDir); rerr != nil {
 			log.Printf("Error removing temp dir %s (%s)", tmpDir, rerr)
 		}
 	}()
-	buf := new(bytes.Buffer)
-	tw := tar.NewWriter(buf)
 	testDataDir, err := tests.DataDir()
 	assert.NoErr(t, err)
-	files := tests.ExpectedDataSlice()
-	for _, file := range files {
-		absFile := filepath.Join(testDataDir, file)
-		fBytes, err := ioutil.ReadFile(absFile)
-		if err != nil {
-			t.Errorf("reading file %s (%s)", file, err)
-			continue
-		}
-		hdr := &tar.Header{
-			Name: file,
-			Mode: int64(os.ModePerm),
-			Size: int64(len(fBytes)),
-		}
-		if err := tw.WriteHeader(hdr); err != nil {
-			t.Errorf("writing tar header for %s", file)
-			continue
-		}
-		if _, err := tw.Write(fBytes); err != nil {
-			t.Errorf("writing bytes for %s (%s)", file, err)
-			continue
-		}
-	}
-	assert.NoErr(t, UntarToDisk(buf, tmpDir))
+
+	testDataFiles, err := getFiles(testDataDir)
+	assert.NoErr(t, err)
+	rdr, err := tarFiles(testDataDir, testDataFiles)
+	assert.NoErr(t, err)
+	assert.NoErr(t, UntarToDisk(rdr, tmpDir))
 	pathSet := tests.ExpectedDataSet()
 	numFound := 0
 	fwErr := filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
@@ -63,5 +41,4 @@ func TestUntarToDisk(t *testing.T) {
 		t.Errorf("found %d paths, expected %d", numFound, len(pathSet))
 		return
 	}
-
 }
