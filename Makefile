@@ -5,3 +5,6 @@ build:
 
 docker-build:
 	docker build --rm -t ${DOCKER_IMAGE_NAME} .
+
+test:
+	go test $$(glide nv)
