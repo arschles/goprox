@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,12 +11,10 @@ import (
 
 func TestUntarToDisk(t *testing.T) {
 	tmpDir, err := tests.CreateTempDir()
+	t.Logf("using temp dir %s", tmpDir)
 	assert.NoErr(t, err)
-	defer func() {
-		if rerr := os.RemoveAll(tmpDir); rerr != nil {
-			log.Printf("Error removing temp dir %s (%s)", tmpDir, rerr)
-		}
-	}()
+	defer os.RemoveAll(tmpDir)
+
 	testDataDir, err := tests.DataDir()
 	assert.NoErr(t, err)
 

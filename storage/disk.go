@@ -3,12 +3,14 @@ package storage
 import (
 	"archive/tar"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
 
 // UntarToDisk untars the tarball contained in obj to repoDir on disk. Assumes that repoDir already exists, and returns any errors along the way
 func UntarToDisk(obj io.Reader, repoDir string) error {
+	log.Printf("UntarToDisk to %s", repoDir)
 	tr := tar.NewReader(obj)
 	for {
 		hdr, err := tr.Next()

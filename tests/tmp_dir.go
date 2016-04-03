@@ -10,12 +10,9 @@ const (
 
 // CreateTempDir creates a temp dir for use with a single test and returns it
 func CreateTempDir() (string, error) {
-	if _, err := ioutil.TempDir("", tmpDirPrefix); err != nil {
-		return "", err
-	}
-	td, err := ioutil.TempDir("", tmpDirPrefix+"/")
+	td, err := ioutil.TempDir("", tmpDirPrefix)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	return td, nil
 }
