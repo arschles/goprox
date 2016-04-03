@@ -3,6 +3,7 @@ package storage
 import (
 	"archive/tar"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -26,6 +27,14 @@ func init() {
 	if goPath == "" {
 		log.Fatalf("GOPATH env var not found, cannot continue")
 	}
+}
+
+func testDataDirFilesSet() map[string]struct{} {
+	ret := make(map[string]struct{})
+	for _, file := range testDataDirFiles {
+		ret[file] = struct{}{}
+	}
+	return ret
 }
 
 func getTestDataDir() (string, error) {
@@ -53,9 +62,30 @@ func TestGetFiles(t *testing.T) {
 }
 
 func TestTarFiles(t *testing.T) {
-	// dir, err := getTestDataDir()
-	// assert.NoErr(t, err)
-	// rdr, err := tarFiles(dir, testDataDirFiles)
-	// assert.NoErr(t, err)
+	dir, err := getTestDataDir()
+	assert.NoErr(t, err)
+	rdr, err := tarFiles(dir, testDataDirFiles)
+	assert.NoErr(t, err)
+	tr := tar.NewReader(rdr)
+	set := testDataDirFilesSet()
+	numFound := 0
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			t.Errorf("reading next record in archive (%s)", err)
+			continue
+		}
+		_, found := set[hdr.Name]
+		if !found {
+			t.Errorf("unknown file %s", hdr.Name)
+			continue
+		}
+		numFound++
+	}
+	if numFound != len(testDataDirFiles) {
+		t.Fatalf("found only %d of %d files in the testdata dir", len(testDataDirFiles), numFound)
+	}
 
 }

@@ -65,7 +65,7 @@ func NewGit(s3Client *s3.Client, bucketName, tmpDir string) http.Handler {
 				log.Printf("Error downloading %s from bucket %s (%s)", objInfo.Key, bucketName, err)
 				return err
 			}
-			if err := storage.UntarObjectToDisk(obj, repoDir); err != nil {
+			if err := storage.UntarToDisk(obj, repoDir); err != nil {
 				log.Printf("Error untarring %s to %s (%s)", objInfo.Key, repoDir, err)
 				return err
 			}
