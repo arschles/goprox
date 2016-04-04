@@ -26,7 +26,12 @@ func TestUntarToDisk(t *testing.T) {
 	pathSet := tests.ExpectedDataSet()
 	numFound := 0
 	fwErr := filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
-		if _, ok := pathSet[path]; !ok {
+		if info.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(tmpDir, path)
+		assert.NoErr(t, err)
+		if _, ok := pathSet[rel]; !ok {
 			t.Errorf("unexpected path found: %s", path)
 			return nil
 		}
