@@ -75,7 +75,7 @@ func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
 	}
 
 	// upload tarball to S3
-	if _, err := cl.PutObject(bucketName, packageName, buf, tarContentType); err != nil {
+	if _, err := cl.PutObject(bucketName, Name(packageName), buf, tarContentType); err != nil {
 		return err
 	}
 	return nil

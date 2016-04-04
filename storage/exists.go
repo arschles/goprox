@@ -6,7 +6,7 @@ import (
 
 // PackageExists returns the ObjectInfo for the given package if it exists in bucket and cl can access that bucket. Otherwise, returns nil and a descriptive error of what happened
 func PackageExists(cl *s3.Client, bucket, pkg string) (*s3.ObjectInfo, error) {
-	st, err := cl.StatObject(bucket, pkg)
+	st, err := cl.StatObject(bucket, Name(pkg))
 	if err != nil {
 		return nil, err
 	}
