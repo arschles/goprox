@@ -23,7 +23,6 @@ func gitClone(repoName, repoDir string) error {
 		log.Printf("error cloning (%s)", err)
 		return err
 	}
-	log.Printf("done filling %s", repoName)
 	return nil
 }
 
@@ -38,13 +37,8 @@ func NewGit(s3Client *s3.Client, bucketName, tmpDir string) http.Handler {
 		packageName := repoDir[len(tmpDir)+1:]
 		if err := os.MkdirAll(repoDir, os.ModePerm); err != nil {
 			log.Printf("error creating %s (%s)", repoDir, err)
-			return err
+			return fmt.Errorf("error creating %s (%s)", repoDir, err)
 		}
-		defer func() {
-			if err := os.RemoveAll(repoDir); err != nil {
-				log.Printf("Error removing repository for %s in %s (%s)", packageName, repoDir, err)
-			}
-		}()
 
 		objInfo, err := storage.PackageExists(s3Client, bucketName, packageName)
 		needsDownload := true
