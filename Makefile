@@ -1,4 +1,4 @@
-VERSION ?= $(git rev-parse --short HEAD)
+VERSION ?= $(shell git rev-parse --short HEAD)
 DOCKER_IMAGE_NAME := quay.io/arschles/goprox:${VERSION}
 
 # dockerized development environment variables
