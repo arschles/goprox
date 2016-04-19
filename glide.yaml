@@ -1,2 +1,4 @@
 package: github.com/arschles/goprox
-import: []
+import:
+- package: github.com/minio/minio-go
+- package: github.com/arschles/assert

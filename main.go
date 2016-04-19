@@ -8,13 +8,11 @@ import (
 
 	"github.com/arschles/goprox/config"
 	"github.com/arschles/goprox/handlers"
+	s3 "github.com/minio/minio-go"
 )
 
 const (
-	servePort = 8080
-	gitPort   = 8081
-	gitScheme = "http"
-	appName   = "goprox"
+	appName = "goprox"
 )
 
 func main() {
@@ -26,12 +24,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting web config (%s)", err)
 	}
+	s3Conf, err := config.GetS3(appName)
+	if err != nil {
+		log.Fatalf("Error getting S3 config (%s)", err)
+	}
 
 	tmpDir, err := createTempDir()
 	if err != nil {
 		log.Fatalf("Error creating temp dir (%s)", err)
 	}
 	defer os.RemoveAll(tmpDir)
+
+	s3Client, err := s3.New(s3Conf.Endpoint, s3Conf.Key, s3Conf.Secret, false)
+	if err != nil {
+		log.Fatalf("Error creating new S3 client (%s)", err)
+	}
 
 	srvCh := make(chan error)
 	gitCh := make(chan error)
@@ -44,7 +51,7 @@ func main() {
 	go func() {
 		hostStr := fmt.Sprintf("%s:%d", gitConf.BindHost, gitConf.BindPort)
 		log.Printf("Serving git on %s", hostStr)
-		handler := handlers.NewGit(tmpDir)
+		handler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
 		gitCh <- http.ListenAndServe(hostStr, handler)
 	}()
 	select {

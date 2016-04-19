@@ -1,4 +1,10 @@
-hash: 9c3f5646272bae5f41591e16ce61868bd44a5d5ff9d4577f39d991860d086ce6
-updated: 2016-03-25T14:22:42.237769941-07:00
-imports: []
+hash: e429257f46693681c19e859300e9becf47b4e6d145b315d2221ca767b1e318f5
+updated: 2016-04-01T15:54:38.81651512-07:00
+imports:
+- name: github.com/arschles/assert
+  version: d21ecd4884be33397d1298c3738b2b4937c7f499
+- name: github.com/kelseyhightower/envconfig
+  version: cea086319492c3940683ea5e122aa5de70a33923
+- name: github.com/minio/minio-go
+  version: 7aabbfe78ae19643a0f3bb4a719caebf9b5cb91a
 devImports: []
