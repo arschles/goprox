@@ -1,4 +1,10 @@
 # goprox
+
+[![Build Status](https://travis-ci.org/arschles/goprox.svg?branch=master)](https://travis-ci.org/arschles/goprox)
+[![Go Report Card](http://goreportcard.com/badge/arsches/goprox)](http://goreportcard.com/report/arschles/goprox)
+[![Docker Repository on Quay](https://quay.io/repository/arschles/goprox/status "Docker Repository on Quay")](https://quay.io/repository/arschles/goprox)
+
+
 A proxy server for Go packages, for you to run yourself
 
 # Work In Progress
