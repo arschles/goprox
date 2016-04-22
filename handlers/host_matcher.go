@@ -10,9 +10,10 @@ import (
 // host values (no regexes) in handlers
 func MatchHost(handlers map[string]http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handler, found := handlers[r.Header.Get("Host")]
+		host := r.Header.Get("Host")
+		handler, found := handlers[host]
 		if !found {
-			http.Error(w, fmt.Sprintf("%s not found", r.URL.Path), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("%s not found for host %s", r.URL.Path, host), http.StatusNotFound)
 			return
 		}
 		handler.ServeHTTP(w, r)
