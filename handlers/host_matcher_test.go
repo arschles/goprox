@@ -10,20 +10,24 @@ import (
 
 func TestMatchHost(t *testing.T) {
 	hdl := MatchHost(map[string]http.Handler{
-		"somehost.com": http.RedirectHandler("abc.com", http.StatusFound),
+		"somehost.com": http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}),
 	})
+	srv := httptest.NewServer(hdl)
+	defer srv.Close()
 
-	r1, err := http.NewRequest("GET", "someotherhost.com", nil)
+	r1, err := http.NewRequest("GET", srv.URL, nil)
 	assert.NoErr(t, err)
-	r1.Header.Set("Host", "someotherhost.com")
-	w1 := httptest.NewRecorder()
-	hdl.ServeHTTP(w1, r1)
-	assert.Equal(t, w1.Code, http.StatusNotFound, "response code")
+	r1.Host = "someotherhost.com"
+	res1, err := http.DefaultClient.Do(r1)
+	assert.NoErr(t, err)
+	assert.Equal(t, res1.StatusCode, http.StatusNotFound, "response code")
 
-	r2, err := http.NewRequest("GET", "somehost.com", nil)
+	r2, err := http.NewRequest("GET", srv.URL, nil)
 	assert.NoErr(t, err)
-	r2.Header.Set("Host", "somehost.com")
-	w2 := httptest.NewRecorder()
-	hdl.ServeHTTP(w2, r2)
-	assert.Equal(t, w2.Code, http.StatusFound, "response code")
+	r2.Host = "somehost.com"
+	res2, err := http.DefaultClient.Do(r2)
+	assert.NoErr(t, err)
+	assert.Equal(t, res2.StatusCode, http.StatusOK, "response code")
 }
