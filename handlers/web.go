@@ -20,7 +20,7 @@ type primary struct {
 // NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
 func NewWeb(webConfig *config.Server, gitConfig *config.Git) http.Handler {
 	return primary{
-		goGet: goGet(webConfig.Host, webConfig.BindPort, gitConfig.Scheme, gitConfig.Host),
+		goGet: goGet(webConfig.Host, webConfig.OutwardPort, gitConfig.Scheme, gitConfig.Host),
 		head:  head(),
 	}
 }

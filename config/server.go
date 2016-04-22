@@ -6,9 +6,10 @@ import (
 
 // Server is the envconfig compatible struct to configure the Web server
 type Server struct {
-	Scheme   string `envconfig:"WEB_SCHEME" default:"http"`
-	BindPort int    `envconfig:"WEB_BIND_PORT" default:"8080"`
-	Host     string `envconfig:"WEB_HOST" default:"localgoprox.com"`
+	Scheme      string `envconfig:"WEB_SCHEME" default:"http"`
+	BindPort    int    `envconfig:"WEB_BIND_PORT" default:"8080"`
+	Host        string `envconfig:"WEB_HOST" default:"localgoprox.com"`
+	OutwardPort int    `envconfig:"WEB_PORT" default:"80"`
 }
 
 // GetServer gets the Server config using envconfig
