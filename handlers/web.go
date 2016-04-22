@@ -18,7 +18,7 @@ type primary struct {
 }
 
 // NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
-func NewWeb(webConfig *config.WebServer, gitConfig *config.GitServer) http.Handler {
+func NewWeb(webConfig *config.Server, gitConfig *config.Git) http.Handler {
 	return primary{
 		goGet: goGet(webConfig.Host, webConfig.Port, gitConfig.Scheme, gitConfig.Host, gitConfig.Port),
 		head:  head(),

@@ -16,11 +16,11 @@ const (
 )
 
 func main() {
-	gitConf, err := config.GetGitServer(appName)
+	gitConf, err := config.GetGit(appName)
 	if err != nil {
 		log.Fatalf("Error getting git config (%s)", err)
 	}
-	webConf, err := config.GetWebServer(appName)
+	srvConf, err := config.GetServer(appName)
 	if err != nil {
 		log.Fatalf("Error getting web config (%s)", err)
 	}
@@ -40,26 +40,15 @@ func main() {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
 
-	srvCh := make(chan error)
-	gitCh := make(chan error)
-	go func() {
-		hostStr := fmt.Sprintf("%s:%d", webConf.BindHost, webConf.BindPort)
-		handler := handlers.NewWeb(webConf, gitConf)
-		log.Printf("Serving web on %s", hostStr)
-		srvCh <- http.ListenAndServe(hostStr, handler)
-	}()
-	go func() {
-		hostStr := fmt.Sprintf("%s:%d", gitConf.BindHost, gitConf.BindPort)
-		log.Printf("Serving git on %s", hostStr)
-		handler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
-		gitCh <- http.ListenAndServe(hostStr, handler)
-	}()
-	select {
-	case err := <-srvCh:
-		log.Printf("Error serving web (%s)", err)
-		os.Exit(1)
-	case err := <-gitCh:
-		log.Printf("Error serving git (%s)", err)
-		os.Exit(1)
+	webHandler := handlers.NewWeb(srvConf, gitConf)
+	gitHandler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
+
+	hostStr := fmt.Sprintf("0.0.0.0:%d", srvConf.BindPort)
+	log.Printf("Serving %s and %s on %s", srvConf.Host, gitConf.Host, hostStr)
+	if err := http.ListenAndServe(hostStr, handlers.MatchHost(map[string]http.Handler{
+		srvConf.Host: webHandler,
+		gitConf.Host: gitHandler,
+	})); err != nil {
+		log.Fatalf("Error running web server (%s)", err)
 	}
 }
