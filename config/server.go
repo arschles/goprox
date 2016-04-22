@@ -9,7 +9,6 @@ type Server struct {
 	Scheme   string `envconfig:"WEB_SCHEME" default:"http"`
 	BindPort int    `envconfig:"WEB_BIND_PORT" default:"8080"`
 	Host     string `envconfig:"WEB_HOST" default:"localgoprox.com"`
-	Port     int    `envconfig:"WEB_PORT" default:"8080"`
 }
 
 // GetServer gets the Server config using envconfig
