@@ -1,6 +1,8 @@
-hash: 45dc2f2ebf5d4f1cb6d69444bc625182e64267b7358c30f995c025b69e1ad0f2
-updated: 2016-04-22T22:38:25.241475142-07:00
+hash: 6f3e4ff7e6f52c80279e8406ac579168e814326881bf1d44be8e87d96f445af6
+updated: 2016-04-23T11:26:33.92294907-07:00
 imports:
+- name: github.com/andybalholm/cascadia
+  version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/arschles/assert
   version: d21ecd4884be33397d1298c3738b2b4937c7f499
 - name: github.com/arschles/flexwork
@@ -9,4 +11,11 @@ imports:
   version: cea086319492c3940683ea5e122aa5de70a33923
 - name: github.com/minio/minio-go
   version: 7aabbfe78ae19643a0f3bb4a719caebf9b5cb91a
+- name: github.com/PuerkitoBio/goquery
+  version: 2e29ea41f0d13f4a303c75553f4eeadddc7a4c56
+- name: golang.org/x/net
+  version: b797637b7aeeed133049c7281bfa31dcc9ca42d6
+  subpackages:
+  - html/atom
+  - html
 devImports: []

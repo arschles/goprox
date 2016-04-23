@@ -3,3 +3,8 @@ import:
 - package: github.com/minio/minio-go
 - package: github.com/arschles/assert
 - package: github.com/arschles/flexwork
+- package: github.com/PuerkitoBio/goquery
+- package: golang.org/x/net
+  subpackages:
+  - html/atom
+  - html
