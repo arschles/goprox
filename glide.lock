@@ -1,8 +1,10 @@
-hash: e429257f46693681c19e859300e9becf47b4e6d145b315d2221ca767b1e318f5
-updated: 2016-04-01T15:54:38.81651512-07:00
+hash: 45dc2f2ebf5d4f1cb6d69444bc625182e64267b7358c30f995c025b69e1ad0f2
+updated: 2016-04-22T22:38:25.241475142-07:00
 imports:
 - name: github.com/arschles/assert
   version: d21ecd4884be33397d1298c3738b2b4937c7f499
+- name: github.com/arschles/flexwork
+  version: df27bbb0067a2a314962a137f32d00b41ccf4b13
 - name: github.com/kelseyhightower/envconfig
   version: cea086319492c3940683ea5e122aa5de70a33923
 - name: github.com/minio/minio-go

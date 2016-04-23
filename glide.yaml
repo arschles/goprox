@@ -2,3 +2,4 @@ package: github.com/arschles/goprox
 import:
 - package: github.com/minio/minio-go
 - package: github.com/arschles/assert
+- package: github.com/arschles/flexwork

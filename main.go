@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/arschles/flexwork"
 	"github.com/arschles/goprox/config"
 	"github.com/arschles/goprox/handlers"
 	s3 "github.com/minio/minio-go"
@@ -47,7 +48,7 @@ func main() {
 	log.Printf("Server config: %s", *srvConf)
 	log.Printf("Git config: %s", *gitConf)
 	log.Printf("Serving %s and %s on %s", srvConf.Host, gitConf.Host, hostStr)
-	if err := http.ListenAndServe(hostStr, handlers.MatchHost(map[string]http.Handler{
+	if err := http.ListenAndServe(hostStr, flexwork.MatchHost(map[string]http.Handler{
 		srvConf.Host: webHandler,
 		gitConf.Host: gitHandler,
 	})); err != nil {
