@@ -28,3 +28,6 @@ docker-deploy: build-alpine docker-build docker-push
 
 test:
 	${DEV_ENV_CMD} go test $$(glide nv)
+
+deploy-to-deis:
+	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
