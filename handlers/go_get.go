@@ -31,11 +31,13 @@ func goGet(webHost string, outwardPort int, gitScheme, gitHost string) http.Hand
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pkg := getPackage(r.URL)
 		repoRoot := fmt.Sprintf("%s://%s:%d/%s", gitScheme, gitHost, outwardPort, pkg)
+		importPrefix := fmt.Sprintf("%s:%d/%s", webHost, outwardPort, pkg)
 		if (gitScheme == "http" && outwardPort == 80) || (gitScheme == "https" && outwardPort == 443) {
 			repoRoot = fmt.Sprintf("%s://%s/%s", gitScheme, gitHost, pkg)
+			importPrefix = fmt.Sprintf("%s/%s", webHost, pkg)
 		}
 		data := goGetTplData{
-			ImportPrefix: fmt.Sprintf("%s:%d/%s", webHost, outwardPort, pkg),
+			ImportPrefix: importPrefix,
 			RepoRoot:     repoRoot,
 		}
 		if err := goGetHTMLTpl.Execute(w, data); err != nil {
