@@ -111,6 +111,10 @@ func TestGetImportPrefix(t *testing.T) {
 	t.Skip("TODO")
 }
 
+func TestGetRepoRoot(t *testing.T) {
+	t.Skip("TODO")
+}
+
 func TestGetPackage(t *testing.T) {
 	type testCase struct {
 		u        *url.URL
