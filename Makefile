@@ -24,5 +24,7 @@ docker-build:
 docker-push:
 	docker push ${DOCKER_IMAGE_NAME}
 
+docker-deploy: build-alpine docker-build docker-push
+
 test:
 	${DEV_ENV_CMD} go test $$(glide nv)
