@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -10,6 +12,10 @@ type Git struct {
 	Scheme string `envconfig:"GIT_SCHEME" default:"http"`
 	// This is the host that the go get server will tell go get to redirect to
 	Host string `envconfig:"GIT_HOST" default:"git.localgoprox.com"`
+}
+
+func (g Git) String() string {
+	return fmt.Sprintf("scheme: %s, host: %s", g.Scheme, g.Host)
 }
 
 // GetGit gets the Git config using envconfig

@@ -44,6 +44,8 @@ func main() {
 	gitHandler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
 
 	hostStr := fmt.Sprintf("0.0.0.0:%d", srvConf.BindPort)
+	log.Printf("Server config: %s", *srvConf)
+	log.Printf("Git config: %s", *gitConf)
 	log.Printf("Serving %s and %s on %s", srvConf.Host, gitConf.Host, hostStr)
 	if err := http.ListenAndServe(hostStr, handlers.MatchHost(map[string]http.Handler{
 		srvConf.Host: webHandler,
