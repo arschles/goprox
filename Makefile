@@ -30,4 +30,4 @@ test:
 	${DEV_ENV_CMD} go test $$(glide nv)
 
 deploy-to-deis:
-	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
+	${DEIS_BINARY_NAME} pull ${DOCKER_IMAGE_NAME} -a ${DEIS_APP_NAME}
