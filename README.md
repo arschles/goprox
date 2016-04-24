@@ -1,7 +1,7 @@
 # GoProx
 
 [![Build Status](https://travis-ci.org/arschles/goprox.svg?branch=master)](https://travis-ci.org/arschles/goprox)
-[![Go Report Card](http://goreportcard.com/badge/arsches/goprox)](http://goreportcard.com/report/arschles/goprox)
+[![Go Report Card](http://goreportcard.com/badge/arschles/goprox)](http://goreportcard.com/report/arschles/goprox)
 [![Docker Repository on Quay](https://quay.io/repository/arschles/goprox/status "Docker Repository on Quay")](https://quay.io/repository/arschles/goprox)
 
 A proxy cache server for Go packages, for you to run in your own cloud.
