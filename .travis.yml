@@ -1,6 +1,4 @@
-language: go
-go:
-  - 1.6.0
+language: generic
 branches:
   only:
     - master
@@ -11,13 +9,9 @@ services:
   - docker
 sudo: required
 install:
-  - curl https://storage.googleapis.com/goprojects/glide-0.10.2-linux-amd64 > glide
-  - chmod +x ./glide
-  - ./glide install
+  - make bootstrap
 script:
-  - go test $(./glide nv)
-  - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o rootfs/bin/goprox
-  - make docker-build
+  - make test build-alpine docker-build
 deploy:
   provider: script
   script: _scripts/deploy.sh
