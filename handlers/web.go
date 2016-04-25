@@ -22,12 +22,13 @@ type primary struct {
 // NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
 func NewWeb(
 	s3Client *s3.Client,
-	bucketName string,
+	bucketName,
+	tplDir string,
 	webConfig *config.Server,
 	gitConfig *config.Git,
 ) (http.Handler, error) {
 
-	idx, err := index(s3Client, bucketName)
+	idx, err := index(s3Client, bucketName, tplDir)
 	if err != nil {
 		return nil, err
 	}

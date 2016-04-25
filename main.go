@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/arschles/flexwork"
 	"github.com/arschles/goprox/config"
@@ -17,6 +18,10 @@ const (
 )
 
 func main() {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Error getting current working directory (%s)", err)
+	}
 	gitConf, err := config.GetGit(appName)
 	if err != nil {
 		log.Fatalf("Error getting git config (%s)", err)
@@ -41,7 +46,8 @@ func main() {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
 
-	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, srvConf, gitConf)
+	tplDir := "/templates"
+	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, tplDir, srvConf, gitConf)
 	if err != nil {
 		log.Fatalf("Error creating web handler (%s)", err)
 	}

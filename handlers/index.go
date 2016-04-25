@@ -3,6 +3,7 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"path/filepath"
 
 	s3 "github.com/minio/minio-go"
 )
@@ -19,8 +20,10 @@ var (
 )
 
 // Index is the handler for the front page of the server
-func index(s3Client *s3.Client, bucketName string) (http.Handler, error) {
-	tpl, err := template.ParseFiles("./templates/index.html")
+func index(s3Client *s3.Client, bucketName, tplDir string) (http.Handler, error) {
+	tpl, err := template.ParseFiles(
+		filepath.Join(tplDir, "index.html"),
+	)
 	if err != nil {
 		return nil, err
 	}
