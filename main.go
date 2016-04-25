@@ -41,7 +41,10 @@ func main() {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
 
-	webHandler := handlers.NewWeb(srvConf, gitConf)
+	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, srvConf, gitConf)
+	if err != nil {
+		log.Fatalf("Error creating web handler (%s)", err)
+	}
 	gitHandler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
 
 	hostStr := fmt.Sprintf("0.0.0.0:%d", srvConf.BindPort)

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://storage.googleapis.com/goprojects/bootstrap-3.3.6/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://storage.googleapis.com/goprojects/bootstrap-3.3.6/css/bootstrap-theme.css.map" />
+  <title>GoProx</title>
+</head>
+<body>
+  <div class="jumbotron">
+    <h1>GoProx!</h1>
+    <p>
+      GoProx is a proxy cache for your Go dependencies. It stores all code in your S3 bucket and you run it yourself. No more broken dependencies or intermittent build failures.
+    </p>
+    <p>
+      This GoProx install is caching {{.NumObjects}} {{pluralize .NumObjects "dependency" "dependencies"}}
+    </p>
+    <p>
+      <a class="btn btn-primary btn-lg" href="https://github.com/arschles/goprox" role="button">See the Project on GitHub</a>
+    </p>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://storage.googleapis.com/goprojects/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+</body>
+</html>
