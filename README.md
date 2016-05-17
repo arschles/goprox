@@ -13,6 +13,42 @@ This project is alpha status. It's in early development and not all features are
 
 GoProx is an open source Git server that proxies requests to Go packages and caches package code outside of hosted source code repositories. Since it speaks the Git protocol, popular tools like [glide](https://github.com/Masterminds/glide), [Godep](https://github.com/tools/godep), and even `go get` can talk to GoProx instead of GitHub (or others).
 
+The server stores and streams its git repositories on [Amazon S3](https://aws.amazon.com/s3/), and achieves slightly faster download times than [GitHub](https://github.com) in some cases. Below is an example benchmark run on the same machine with the same network connection. Note that the Kubernetes repository is approximately 316 MB.
+
+Directly from GitHub:
+
+```console
+ENG000656:Desktop aaronschlesinger$ time git clone https://github.com/kubernetes/kubernetes.git
+Cloning into 'kubernetes'...
+remote: Counting objects: 267274, done.
+remote: Compressing objects: 100% (19/19), done.
+remote: Total 267274 (delta 6), reused 2 (delta 2), pack-reused 267253
+Receiving objects: 100% (267274/267274), 191.03 MiB | 891.00 KiB/s, done.
+Resolving deltas: 100% (175363/175363), done.
+Checking connectivity... done.
+
+real	5m13.588s
+user	0m13.046s
+sys	0m7.299s
+```
+
+From a GoProx server running on [Google Container Engine](https://cloud.google.com/container-engine/) (which is in [Google Cloud](https://cloud.google.com/)):
+
+```console
+ENG000656:k8s1 aaronschlesinger$ time git clone http://git.goprox.io/github.com/kubernetes/kubernetes
+Cloning into 'kubernetes'...
+remote: Counting objects: 260017, done.
+remote: Compressing objects: 100% (82979/82979), done.
+remote: Total 260017 (delta 170072), reused 260017 (delta 170072)
+Receiving objects: 100% (260017/260017), 187.82 MiB | 1.41 MiB/s, done.
+Resolving deltas: 100% (170072/170072), done.
+Checking connectivity... done.
+
+real	4m5.802s
+user	0m10.398s
+sys	0m6.450s
+```
+
 # Why It Helps
 
 GoProx lets you control the source of your dependeny _server and code_, so regardless of what happens with the original code, you'll always have a copy in your S3 account, and you'll always be able to access it as long as you have a GoProx server running.
