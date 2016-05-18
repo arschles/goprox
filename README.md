@@ -53,7 +53,7 @@ sys	0m6.450s
 
 GoProx lets you control the source of your dependeny _server and code_, so regardless of what happens with the original code, you'll always have a copy in your S3 account, and you'll always be able to access it as long as you have a GoProx server running.
 
-Since it's not a shared server, database or code repository, you don't need to rely on a third party to serve or store your dependencies for you. Instead, you maintain the server and store dependencies in S3.
+Since it's not a shared server, database or code repository, you don't need to rely on a third party to serve or store your dependencies for you. Instead, you maintain the server and store dependencies in S3. As a result, uptime is determined by S3 and you (or the operators of your goprox server install).
 
 # Problems It Solves
 
