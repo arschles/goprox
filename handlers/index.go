@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/arschles/flexwork/tpl"
 	s3 "github.com/minio/minio-go"
 )
 
@@ -20,7 +21,7 @@ var (
 )
 
 // Index is the handler for the front page of the server
-func index(s3Client *s3.Client, bucketName, tplDir string) (http.Handler, error) {
+func index(s3Client *s3.Client, bucketName, tplCtx tpl.Context) (http.Handler, error) {
 	tpl, err := template.ParseFiles(
 		filepath.Join(tplDir, "index.html"),
 	)

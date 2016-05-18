@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/arschles/flexwork"
+	"github.com/arschles/flexwork/tpl"
 	"github.com/arschles/goprox/config"
 	"github.com/arschles/goprox/handlers"
 	s3 "github.com/minio/minio-go"
@@ -17,10 +18,6 @@ const (
 )
 
 func main() {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Error getting current working directory (%s)", err)
-	}
 	gitConf, err := config.GetGit(appName)
 	if err != nil {
 		log.Fatalf("Error getting git config (%s)", err)
@@ -33,6 +30,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting S3 config (%s)", err)
 	}
+
+	tplCtx := tpl.NewCachingContext(srvConf.TemplateBaseDir)
 
 	tmpDir, err := createTempDir()
 	if err != nil {
