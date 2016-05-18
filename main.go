@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/arschles/flexwork"
 	"github.com/arschles/goprox/config"
