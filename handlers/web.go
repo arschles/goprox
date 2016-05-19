@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/arschles/flexwork/tpl"
 	"github.com/arschles/goprox/config"
 	s3 "github.com/minio/minio-go"
 )
@@ -22,13 +23,13 @@ type primary struct {
 // NewWeb returns the main handler responsible for serving web traffic, including 'go get' traffic
 func NewWeb(
 	s3Client *s3.Client,
-	bucketName,
-	tplDir string,
+	bucketName string,
 	webConfig *config.Server,
 	gitConfig *config.Git,
+	tplCtx tpl.Context,
 ) (http.Handler, error) {
 
-	idx, err := index(s3Client, bucketName, tplDir)
+	idx, err := index(s3Client, bucketName, tplCtx)
 	if err != nil {
 		return nil, err
 	}

@@ -44,8 +44,7 @@ func main() {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
 
-	tplDir := "/templates"
-	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, tplDir, srvConf, gitConf)
+	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, srvConf, gitConf, tplCtx)
 	if err != nil {
 		log.Fatalf("Error creating web handler (%s)", err)
 	}
