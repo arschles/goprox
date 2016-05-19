@@ -3,3 +3,4 @@ import:
 - package: github.com/minio/minio-go
 - package: github.com/arschles/assert
 - package: github.com/arschles/flexwork
+  ref: 2ad93c7d0f23e0e6806f38e3206cd4d94531264a
