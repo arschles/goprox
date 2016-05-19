@@ -4,5 +4,5 @@ ENV GIT_PORT $WEB_BIND_PORT
 EXPOSE $WEB_BIND_PORT
 RUN apk -U add git &&  rm -rf /var/cache/apk/*
 ADD bin/goprox /bin/goprox
-ADD templates /
+ADD templates /templates
 CMD ["/bin/goprox"]
