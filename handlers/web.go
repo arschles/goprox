@@ -41,15 +41,17 @@ func NewWeb(
 }
 
 func (m primary) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == getMethod && r.URL.Path == "/" {
+		m.index.ServeHTTP(w, r)
+		return
+	}
+	if r.Method == getMethod && r.URL.Query().Get(goGetQueryKey) == "1" {
+		m.goGet.ServeHTTP(w, r)
+		return
+	}
 	if r.Method == headMethod {
 		m.head.ServeHTTP(w, r)
 		return
-	} else if r.Method == getMethod && r.URL.Query().Get(goGetQueryKey) == "1" {
-		m.goGet.ServeHTTP(w, r)
-		return
-	} else if r.Method == getMethod {
-		m.index.ServeHTTP(w, r)
 	}
-
 	http.NotFound(w, r)
 }
