@@ -31,6 +31,7 @@ func main() {
 		log.Fatalf("Error getting S3 config (%s)", err)
 	}
 
+	log.Printf("Creating caching context for directory %s", srvConf.TemplateBaseDir)
 	tplCtx := tpl.NewCachingContext(srvConf.TemplateBaseDir)
 
 	tmpDir, err := createTempDir()
