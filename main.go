@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,21 @@ import (
 const (
 	appName = "goprox"
 )
+
+var (
+	funcs = template.FuncMap(map[string]interface{}{
+		"pluralize": func(i int, singular, plural string) string {
+			if i == 1 {
+				return singular
+			}
+			return plural
+		},
+	})
+)
+
+func createTplCtx(baseDir string, funcs template.FuncMap) tpl.Context {
+	return tpl.NewCachingContext(baseDir, funcs)
+}
 
 func main() {
 	gitConf, err := config.GetGit(appName)
@@ -32,7 +48,7 @@ func main() {
 	}
 
 	log.Printf("Creating caching context for directory %s", srvConf.TemplateBaseDir)
-	tplCtx := tpl.NewCachingContext(srvConf.TemplateBaseDir)
+	tplCtx := createTplCtx(srvConf.TemplateBaseDir, funcs)
 
 	tmpDir, err := createTempDir()
 	if err != nil {
