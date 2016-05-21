@@ -1,10 +1,10 @@
-hash: 2d74955d8c6daa0775619b92b6b6fadcfdd256f8c75fc5701b6a3afc47ef6413
-updated: 2016-05-18T19:33:30.157470741-07:00
+hash: 5b7d16523826036483a07462ecff6189511bcf36cd1ca79b93622b7e5f00f0d6
+updated: 2016-05-21T14:48:18.485105889-07:00
 imports:
 - name: github.com/arschles/assert
   version: d21ecd4884be33397d1298c3738b2b4937c7f499
 - name: github.com/arschles/flexwork
-  version: 2ad93c7d0f23e0e6806f38e3206cd4d94531264a
+  version: 0b264fa9f74aa4ce8fbfcf542742d16250cebdc9
   subpackages:
   - tpl
 - name: github.com/kelseyhightower/envconfig
