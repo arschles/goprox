@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/arschles/flexwork"
+	"github.com/arschles/flexwork/tpl"
 	"github.com/arschles/goprox/config"
 	"github.com/arschles/goprox/handlers"
 	s3 "github.com/minio/minio-go"
@@ -15,6 +17,21 @@ import (
 const (
 	appName = "goprox"
 )
+
+var (
+	funcs = template.FuncMap(map[string]interface{}{
+		"pluralize": func(i int, singular, plural string) string {
+			if i == 1 {
+				return singular
+			}
+			return plural
+		},
+	})
+)
+
+func createTplCtx(baseDir string, funcs template.FuncMap) tpl.Context {
+	return tpl.NewCachingContext(baseDir, funcs)
+}
 
 func main() {
 	gitConf, err := config.GetGit(appName)
@@ -30,6 +47,9 @@ func main() {
 		log.Fatalf("Error getting S3 config (%s)", err)
 	}
 
+	log.Printf("Creating caching context for directory %s", srvConf.TemplateBaseDir)
+	tplCtx := createTplCtx(srvConf.TemplateBaseDir, funcs)
+
 	tmpDir, err := createTempDir()
 	if err != nil {
 		log.Fatalf("Error creating temp dir (%s)", err)
@@ -41,7 +61,10 @@ func main() {
 		log.Fatalf("Error creating new S3 client (%s)", err)
 	}
 
-	webHandler := handlers.NewWeb(srvConf, gitConf)
+	webHandler, err := handlers.NewWeb(s3Client, s3Conf.Bucket, srvConf, gitConf, tplCtx)
+	if err != nil {
+		log.Fatalf("Error creating web handler (%s)", err)
+	}
 	gitHandler := handlers.NewGit(s3Client, s3Conf.Bucket, tmpDir)
 
 	hostStr := fmt.Sprintf("0.0.0.0:%d", srvConf.BindPort)
