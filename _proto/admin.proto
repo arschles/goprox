@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package admin;
 
-service AdminServer {
+service Admin {
   rpc GetPackages(Empty) returns (PackageList) {}
 }
 

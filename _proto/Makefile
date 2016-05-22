@@ -1,2 +1,2 @@
 codegen-admin:
-	protoc --go_out=plugins=grpc:../admin adminsrv.proto
+	protoc --go_out=plugins=grpc:../admin admin.proto
