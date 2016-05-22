@@ -13,6 +13,7 @@ type Server struct {
 	Host            string `envconfig:"WEB_HOST" default:"localgoprox.com"`
 	OutwardPort     int    `envconfig:"WEB_PORT" default:"80"`
 	TemplateBaseDir string `envconfig:"TEMPLATE_BASE_DIR" default:"/templates"`
+	AdminPort       int    `envconfig:"ADMIN_PORT" default:"8089"`
 }
 
 func (s Server) String() string {
