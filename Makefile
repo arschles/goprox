@@ -29,5 +29,8 @@ docker-deploy: build-alpine docker-build docker-push
 test:
 	${DEV_ENV_CMD} go test $$(glide nv)
 
+codegen-admin:
+	make -C ./_proto codegen-admin
+
 deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${DOCKER_IMAGE_NAME} -a ${DEIS_APP_NAME}
