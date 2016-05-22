@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package admin;
+
+service AdminServer {
+  rpc GetPackages(Empty) returns (PackageList) {}
+}
+
+message PackageList {
+  repeated Package packages = 1;
+}
+
+message Package {
+  string Name = 1;
+}
+
+message Empty {}
