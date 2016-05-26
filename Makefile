@@ -30,7 +30,7 @@ test:
 	${DEV_ENV_CMD} go test $$(glide nv)
 
 codegen-admin:
-	make -C ./_proto codegen-admin
+	protoc --go_out=plugins=grpc:./admin _proto/admin.proto
 
 deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${DOCKER_IMAGE_NAME} -a ${DEIS_APP_NAME}
