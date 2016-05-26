@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -8,6 +9,10 @@ import (
 	s3 "github.com/minio/minio-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+)
+
+var (
+	errNotYetImplemented = errors.New("not yet implemented")
 )
 
 // server implements the AdminServer interface
@@ -29,6 +34,14 @@ func (s *server) GetPackages(ctx context.Context, in *Empty) (*PackageList, erro
 	}
 
 	return packageList, nil
+}
+
+func (s *server) AddPackage(ctx context.Context, fp *FullPackage) (*FullPackage, error) {
+	return nil, errNotYetImplemented
+}
+
+func (s *server) UpgradePackage(ctx context.Context, fp *FullPackage) (*FullPackage, error) {
+	return nil, errNotYetImplemented
 }
 
 // StartServer starts the admin server

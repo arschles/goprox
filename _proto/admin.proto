@@ -4,6 +4,13 @@ package admin;
 
 service Admin {
   rpc GetPackages(Empty) returns (PackageList) {}
+  rpc UpgradePackage(FullPackage) returns (FullPackage) {}
+  rpc AddPackage(FullPackage) returns (FullPackage) {}
+}
+
+message FullPackage {
+  string Name = 1;
+  string SHA = 2;
 }
 
 message PackageList {
