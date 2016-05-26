@@ -18,6 +18,9 @@ build:
 build-alpine:
 	${BUILD_ALPINE_CMD_PREFIX} go build -o rootfs/bin/goprox
 
+build-cli:
+	make -C cli build
+
 docker-build:
 	docker build --rm -t ${DOCKER_IMAGE_NAME} rootfs
 
