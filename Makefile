@@ -29,6 +29,9 @@ docker-deploy: build-alpine docker-build docker-push
 test:
 	${DEV_ENV_CMD} go test $$(glide nv)
 
+run-test:
+	docker run --rm -e AWS_KEY=${GOPROX_AWS_KEY} -e AWS_SECRET=${GOPROX_AWS_SECRET} ${DOCKER_IMAGE_NAME}
+
 codegen-admin:
 	protoc --go_out=plugins=grpc:./admin _proto/admin.proto
 
