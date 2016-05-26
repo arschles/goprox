@@ -36,10 +36,12 @@ func (s *server) GetPackages(ctx context.Context, in *Empty) (*PackageList, erro
 	return packageList, nil
 }
 
+// AddPackage is the AdminServer interface implementation
 func (s *server) AddPackage(ctx context.Context, fp *FullPackage) (*FullPackage, error) {
 	return nil, errNotYetImplemented
 }
 
+// UpgradePackage is the AdminServer interface implementation
 func (s *server) UpgradePackage(ctx context.Context, fp *FullPackage) (*FullPackage, error) {
 	return nil, errNotYetImplemented
 }
