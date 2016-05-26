@@ -33,7 +33,7 @@ run-test:
 	docker run --rm -e AWS_KEY=${GOPROX_AWS_KEY} -e AWS_SECRET=${GOPROX_AWS_SECRET} ${DOCKER_IMAGE_NAME}
 
 codegen-admin:
-	protoc --go_out=plugins=grpc:./admin _proto/admin.proto
+	make -C ./_proto codegen-admin
 
 deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${DOCKER_IMAGE_NAME} -a ${DEIS_APP_NAME}
