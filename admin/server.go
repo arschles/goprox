@@ -1,8 +1,8 @@
 package admin
 
 import (
+	"fmt"
 	"net"
-	"strconv"
 
 	"github.com/arschles/goprox/storage"
 	s3 "github.com/minio/minio-go"
@@ -33,7 +33,7 @@ func (s *server) GetPackages(ctx context.Context, in *Empty) (*PackageList, erro
 
 // StartServer starts the admin server
 func StartServer(s3Client *s3.Client, bucketName string, port int) error {
-	lis, err := net.Listen("tcp", strconv.Itoa(port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
