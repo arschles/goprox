@@ -42,13 +42,13 @@ spec:
                   key: aws-secret-key
           livenessProbe:
             httpGet:
-              path: /get
+              path: /live
               port: {{.Values.containerPort}}
             initialDelaySeconds: 5
             timeoutSeconds: 1
           readinessProbe:
             httpGet:
-              path: /get
+              path: /ready
               port: {{.Values.containerPort}}
             initialDelaySeconds: 5
             timeoutSeconds: 1
