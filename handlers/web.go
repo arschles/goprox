@@ -45,6 +45,9 @@ func (m primary) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		m.index.ServeHTTP(w, r)
 		return
 	}
+	if r.Method == getMethod && (r.URL.Path == "/live" || r.URL.Path == "ready") {
+		w.WriteHeader(http.StatusOK)
+	}
 	if r.Method == getMethod && r.URL.Query().Get(goGetQueryKey) == "1" {
 		m.goGet.ServeHTTP(w, r)
 		return

@@ -1,0 +1,7 @@
+name: goprox
+home: https://github.com/arschles/goprox
+version: devel
+description: A proxy cache for Go dependencies
+maintainers:
+  - name: Aaron Schlesinger
+    email: arschles+goprox@gmail.com

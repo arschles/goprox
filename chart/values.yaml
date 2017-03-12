@@ -1,0 +1,8 @@
+containerPort: 8080
+namespace: goprox
+numReplicas: 3
+dockerTag: devel
+dockerOrg: arschles
+dockerPullPolicy: Always
+awsAccessKeyID: "SET THIS ON THE COMMAND LINE"
+awsSecretKey: "SET THIS ON THE COMMAND LINE"

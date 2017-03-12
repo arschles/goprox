@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: goprox
+  namespace: {{.Values.namespace}}
+  labels:
+    app: goprox
+spec:
+  replicas: {{.Values.numReplicas}}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: goprox
+  template:
+    metadata:
+      labels:
+        app: goprox
+    spec:
+      containers:
+        - name: goprox
+          image: quay.io/{{.Values.dockerOrg}}/goprox:{{.Values.dockerTag}}
+          imagePullPolicy: {{.Values.dockerPullPolicy}}
+          ports:
+            - containerPort: {{.Values.containerPort}}
+              name: http
+          env:
+            - name: "PORT"
+              value: "{{.Values.containerPort}}"
+            - name: "AWS_KEY"
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: aws-access-key-id
+            - name: "AWS_SECRET"
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: aws-secret-key
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: {{.Values.containerPort}}
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{.Values.containerPort}}
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
