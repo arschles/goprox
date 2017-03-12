@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package goproxd;
+
+option go_package = "lib";
+
+service GoProxD {
+  rpc GoGet(PackageMeta) returns (FullPackage) {}
+  rpc UpgradePackage(FullPackage) returns (Empty) {}
+  rpc AddPackage(FullPackage) returns (Empty) {}
+}
+
+message PackageMeta {
+  string Name = 1;
+  string Version = 2;
+}
+
+message FullPackage {
+  PackageMeta Metadata = 1;
+  bytes TarGZ = 2;
+}
+
+message Empty {}

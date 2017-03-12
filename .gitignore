@@ -26,3 +26,6 @@ vendor
 goprox
 goprox-cli
 rootfs/bin/goprox
+cmd/cli/goprox
+cmd/server/goproxd
+cmd/server/rootfs/bin/goproxd
