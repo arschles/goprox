@@ -1,2 +1,2 @@
 codegen:
-	protoc --go_out=plugins=grpc:../cmd/server/lib goproxd.proto
+	protoc --go_out=plugins=grpc:../gen goproxd.proto

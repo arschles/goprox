@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package goproxd;
 
-option go_package = "lib";
+option go_package = "gen";
 
 service GoProxD {
   rpc GoGet(PackageMeta) returns (FullPackage) {}
@@ -17,7 +17,8 @@ message PackageMeta {
 
 message FullPackage {
   PackageMeta Metadata = 1;
-  bytes TarGZ = 2;
+  // the entire package tarball
+  bytes Payload = 2;
 }
 
 message Empty {}

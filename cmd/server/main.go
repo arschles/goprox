@@ -7,8 +7,10 @@ import (
 	"net"
 	"os"
 
-	"github.com/arschles/goprox/cmd/server/lib"
-	s3 "github.com/minio/minio-go"
+	"io/ioutil"
+
+	"github.com/arschles/goprox/gen"
+	"github.com/arschles/goprox/storage"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -23,38 +25,45 @@ var (
 
 // server implements the GoProxDServer interface
 type server struct {
-	s3Client   *s3.Client
-	bucketName string
+	fetcher storage.Fetcher
 }
 
 // GetPackages is the AdminServer interface implementation
-func (s *server) GoGet(context.Context, *lib.PackageMeta) (*lib.FullPackage, error) {
-	return &lib.FullPackage{
-		Metadata: &lib.PackageMeta{},
-		TarGZ:    nil,
+func (s *server) GoGet(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPackage, error) {
+	tarball, err := s.fetcher.GetContents(meta.Name, meta.Version)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: stream this down to the client
+	bytes, err := ioutil.ReadAll(tarball)
+	if err != nil {
+		return nil, err
+	}
+	return &gen.FullPackage{
+		Metadata: meta,
+		Payload:  bytes,
 	}, nil
 }
 
-func (s *server) UpgradePackage(context.Context, *lib.FullPackage) (*lib.Empty, error) {
-	return &lib.Empty{}, nil
+func (s *server) UpgradePackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
+	return &gen.Empty{}, nil
 }
 
-func (s *server) AddPackage(context.Context, *lib.FullPackage) (*lib.Empty, error) {
-	return &lib.Empty{}, nil
+func (s *server) AddPackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
+	return &gen.Empty{}, nil
 }
 
-// StartServer starts the admin server
-func StartServer(s3Client *s3.Client, bucketName string, port int) error {
+func startServer(fetcher storage.Fetcher, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
 	srv := grpc.NewServer()
-	lib.RegisterGoProxDServer(srv, &server{s3Client: s3Client, bucketName: bucketName})
+	gen.RegisterGoProxDServer(srv, &server{fetcher: fetcher})
 	return srv.Serve(lis)
 }
 
 func main() {
-	log.Printf("not yet implemented!")
-	os.Exit(1)
+	fetcher := storage.DiskFetcher{Gopath: os.Getenv("GOPATH")}
+	log.Fatal(startServer(fetcher, 8080))
 }
