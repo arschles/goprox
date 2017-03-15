@@ -53,6 +53,10 @@ func (s *server) AddPackage(context.Context, *gen.FullPackage) (*gen.Empty, erro
 	return &gen.Empty{}, nil
 }
 
+func (s *server) PackageExists(ctx context.Context, meta *gen.PackageMeta) (*gen.PackageMeta, error) {
+	return meta, nil
+}
+
 func startServer(fetcher storage.Fetcher, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {

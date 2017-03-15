@@ -26,6 +26,7 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 		log.Fatal(err)
 	}
 	cmd.AddCommand(newGetCommand(out, conn))
+	cmd.AddCommand(newExistsCommand(out, conn))
 	return cmd, conn
 }
 
