@@ -5,4 +5,4 @@ import:
 - package: github.com/arschles/flexwork
   version: 5dd4c9b3432f0ba4858207d51c8861c7cd781bce
 - package: google.golang.org/grpc
-- package: github.com/codegangsta/cli
+- package: github.com/spf13/cobra

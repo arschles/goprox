@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bytes"
-	"context"
+	"errors"
+	"io"
 	"log"
-	"path/filepath"
+	"os"
 
-	"github.com/arschles/goprox/gen"
-	"github.com/arschles/goprox/storage"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
 
@@ -15,8 +14,36 @@ const (
 	appName = "goprox"
 )
 
-func init() {
-	log.SetFlags(log.Flags() | log.Lshortfile)
+func newRootCmd(out io.Writer, conn *grpc.ClientConn) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "goprox",
+		Short: "The Goprox dependency manager",
+		// Long:         globalUsage,
+		SilenceUsage: true,
+		// PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		// 	teardown()
+		// },
+	}
+	// p := cmd.PersistentFlags()
+	cmd.AddCommand(newGetCommand(out, conn))
+	return cmd
+}
+
+func newGetCommand(out io.Writer, conn *grpc.ClientConn) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get PACKAGE VERSION",
+		Short: "download a package to your vendor directory",
+		// Long:  createDesc,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return errors.New("package & version are required")
+			}
+			name, version := args[0], args[1]
+			return get(out, conn, name, version)
+		},
+	}
+
+	return cmd
 }
 
 func main() {
@@ -25,25 +52,9 @@ func main() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	cl := gen.NewGoProxDClient(conn)
-	pkg, err := cl.GoGet(context.Background(), &gen.PackageMeta{
-		Name:    "github.com/arschles/kubehttpbin",
-		Version: "HEAD",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	log.Printf("got package %s@%s", pkg.Metadata.Name, pkg.Metadata.Version)
-	untarTo := filepath.Join("vendor", pkg.Metadata.Name)
-	if err := storage.UntarToDisk(bytes.NewBuffer(pkg.Payload), untarTo); err != nil {
-		log.Fatal(err)
+	cmd := newRootCmd(os.Stdout, conn)
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
 	}
-	log.Printf("package written to %s", untarTo)
-
-	// conn, err := grpc.Dial(conf.AdminHostString, grpc.WithInsecure())
-	// if err != nil {
-	// 	log.Fatalf("error dialing server (%s)", err)
-	// }
-	// defer conn.Close()
 }
