@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 const (
@@ -17,32 +18,34 @@ const (
 // DiskFetcher is a Fetcher that reads from the gopath given. it ignores all versions and
 // will not change the gopath in any way
 type DiskFetcher struct {
-	Gopath string
+	Gopath   string
+	Excludes []string
 }
 
 // GetContents is the fetcher interface implementation
 func (d DiskFetcher) GetContents(pkgName string, version string) (io.Reader, error) {
 	log.Printf("package %s", pkgName)
-	prefix := filepath.Join(d.Gopath, srcDir)
-	files, err := getFiles(filepath.Join(prefix, pkgName))
+	goPathSrcDir := filepath.Join(d.Gopath, srcDir)
+	repoPrefix := filepath.Join(goPathSrcDir, pkgName)
+	files, err := getFiles(repoPrefix, d.Excludes...)
 	if err != nil {
 		return nil, err
 	}
 	log.Printf("files %#v", files)
-	return tarFiles(prefix, files)
+	return tarFiles(repoPrefix, files...)
 }
 
 // get a list of relative paths of all files under dir
-func getFiles(dir string) ([]string, error) {
+func getFiles(dir string, excludes ...string) ([]string, error) {
 	files := []string{}
-	if err := filepath.Walk(dir, getWalkFunc(dir, &files)); err != nil {
+	if err := filepath.Walk(dir, getWalkFunc(dir, &files, excludes...)); err != nil {
 		return nil, err
 	}
 	return files, nil
 }
 
 // tarFiles produces a tarball of all files. It reads each file that lives under prefix and stores it in the tarball as the path in the slice
-func tarFiles(prefix string, files []string) (io.Reader, error) {
+func tarFiles(prefix string, files ...string) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
 	for _, file := range files {
@@ -65,7 +68,7 @@ func tarFiles(prefix string, files []string) (io.Reader, error) {
 	return buf, nil
 }
 
-func getWalkFunc(baseDir string, files *[]string) filepath.WalkFunc {
+func getWalkFunc(baseDir string, files *[]string, excludes ...string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -73,6 +76,13 @@ func getWalkFunc(baseDir string, files *[]string) filepath.WalkFunc {
 		rel, err := filepath.Rel(baseDir, path)
 		if err != nil {
 			return err
+		}
+		for _, exclude := range excludes {
+			matched, err := regexp.Match(exclude, []byte(rel))
+			if err == nil && matched {
+				log.Printf("excluding file %s", rel)
+				return nil
+			}
 		}
 		*files = append(*files, rel)
 		return nil

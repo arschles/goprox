@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"log"
+	"path/filepath"
 
 	"github.com/arschles/goprox/gen"
+	"github.com/arschles/goprox/storage"
 	"google.golang.org/grpc"
 )
 
@@ -30,6 +33,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("got package %s@%s", pkg.Metadata.Name, pkg.Metadata.Version)
+	untarTo := filepath.Join("vendor", pkg.Metadata.Name)
+	if err := storage.UntarToDisk(bytes.NewBuffer(pkg.Payload), untarTo); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("package written to %s", untarTo)
 
 	// conn, err := grpc.Dial(conf.AdminHostString, grpc.WithInsecure())
 	// if err != nil {
