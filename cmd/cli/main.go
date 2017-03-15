@@ -13,25 +13,26 @@ const (
 	appName = "goprox"
 )
 
-func newRootCmd(out io.Writer, conn *grpc.ClientConn) *cobra.Command {
+func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	cmd := &cobra.Command{
 		Use:          "goprox",
 		Short:        "The Goprox dependency manager",
 		SilenceUsage: true,
 	}
-	cmd.AddCommand(newGetCommand(out, conn))
-	return cmd
-}
-
-func main() {
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+	p := cmd.PersistentFlags()
+	hostStr := p.String("host", "localhost:8080", "The host of the goprox server")
+	conn, err := grpc.Dial(*hostStr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
+	cmd.AddCommand(newGetCommand(out, conn))
+	return cmd, conn
+}
 
-	cmd := newRootCmd(os.Stdout, conn)
+func main() {
+	cmd, conn := newRootCmd(os.Stdout)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+	defer conn.Close()
 }
