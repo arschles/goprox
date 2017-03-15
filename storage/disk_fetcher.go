@@ -35,7 +35,8 @@ func (d DiskFetcher) GetContents(pkgName string, version string) (io.Reader, err
 	return tarFiles(repoPrefix, files...)
 }
 
-// get a list of relative paths of all files under dir
+// get a list of relative paths of all files under dir. call filepath.Join(dir, file) for each
+// returned file to get the absolute path
 func getFiles(dir string, excludes ...string) ([]string, error) {
 	files := []string{}
 	if err := filepath.Walk(dir, getWalkFunc(dir, &files, excludes...)); err != nil {
