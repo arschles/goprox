@@ -66,7 +66,7 @@ func startServer(fetcher storage.Fetcher, port int) error {
 func main() {
 	fetcher := storage.DiskFetcher{
 		Gopath:   os.Getenv("GOPATH"),
-		Excludes: []string{".git/*"},
+		Excludes: []string{".git/*", "vendor/*"},
 	}
 	log.Printf("Serving goproxd on port 8080")
 	log.Fatal(startServer(fetcher, 8080))
