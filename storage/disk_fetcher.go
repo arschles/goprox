@@ -3,6 +3,7 @@ package storage
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,6 +14,10 @@ import (
 
 const (
 	srcDir = "src"
+)
+
+var (
+	errNilFileInfo = errors.New("nil file info")
 )
 
 // DiskFetcher is a Fetcher that reads from the gopath given. it ignores all versions and
@@ -71,6 +76,14 @@ func tarFiles(prefix string, files ...string) (io.Reader, error) {
 
 func getWalkFunc(baseDir string, files *[]string, excludes ...string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// TODO: handle this case!
+			return nil
+		}
+		if info == nil {
+			// TODO: handle this case!
+			return errNilFileInfo
+		}
 		if info.IsDir() {
 			return nil
 		}
