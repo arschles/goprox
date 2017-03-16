@@ -32,7 +32,7 @@ func newPackageDirCommand(out io.Writer) *cobra.Command {
 func packageDir(path string) error {
 	target := strings.Replace(path, string(os.PathSeparator), "-", -1) + packageFileExtension
 	log.Printf("Packaging %s into %s", path, target)
-	if err := storage.TarToDisk(path, target); err != nil {
+	if err := storage.ArchiveToDisk(path, target); err != nil {
 		return err
 	}
 	log.Printf("Packaged %s into %s", path, target)

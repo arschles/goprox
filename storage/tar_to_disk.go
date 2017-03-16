@@ -5,14 +5,14 @@ import (
 	"os"
 )
 
-// TarToDisk creates a tarball of the contents of directory and writes that tarball to the file
-// at target. It creates target if it didn't already exist
-func TarToDisk(directory, target string) error {
+// ArchiveToDisk creates an archive of the contents of directory and writes that tarball
+// to the file at target. It creates target if it didn't already exist
+func ArchiveToDisk(directory, target string) error {
 	files, err := getFiles(directory) // TODO: excludes
 	if err != nil {
 		return err
 	}
-	buf, err := tarFiles(directory, files...)
+	buf, err := archiveFiles(directory, files...)
 	if err != nil {
 		return err
 	}

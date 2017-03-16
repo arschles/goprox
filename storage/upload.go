@@ -15,7 +15,7 @@ func UploadPackage(cl *s3.Client, bucketName, packageName, dir string) error {
 		return err
 	}
 
-	buf, err := tarFiles(dir, files...)
+	buf, err := archiveFiles(dir, files...)
 	if err != nil {
 		return err
 	}
