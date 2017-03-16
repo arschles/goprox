@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -22,6 +23,9 @@ func newPackageDirCommand(out io.Writer) *cobra.Command {
 				return errors.New("package path is required")
 			}
 			path := args[0]
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				return fmt.Errorf("%s does not exist on disk", path)
+			}
 			return packageDir(path)
 		},
 	}
