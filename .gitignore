@@ -24,4 +24,11 @@ _testmain.go
 *.prof
 vendor
 goprox
+goprox-cli
 rootfs/bin/goprox
+cmd/cli/goprox
+cmd/cli/cli
+cmd/server/goproxd
+cmd/server/server
+cmd/server/rootfs/bin/goproxd
+

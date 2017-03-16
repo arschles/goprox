@@ -1,11 +1,14 @@
 package storage
 
 import (
+	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/arschles/assert"
+	"github.com/arschles/goprox/files"
 	"github.com/arschles/goprox/tests"
 )
 
@@ -18,11 +21,11 @@ func TestUntarToDisk(t *testing.T) {
 	testDataDir, err := tests.DataDir()
 	assert.NoErr(t, err)
 
-	testDataFiles, err := getFiles(testDataDir)
+	testDataFiles, err := files.List(context.Background(), testDataDir)
 	assert.NoErr(t, err)
-	rdr, err := tarFiles(testDataDir, testDataFiles)
-	assert.NoErr(t, err)
-	assert.NoErr(t, UntarToDisk(rdr, tmpDir))
+	buf := new(bytes.Buffer)
+	assert.NoErr(t, archiveFiles(testDataDir, buf, testDataFiles...))
+	assert.NoErr(t, UntarToDisk(buf, tmpDir))
 	pathSet := tests.ExpectedDataSet()
 	numFound := 0
 	fwErr := filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {

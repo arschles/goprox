@@ -1,5 +1,5 @@
-hash: 856fda9cbcf5844174120a531a2cd8a8615f723214750c67e135688af6214d89
-updated: 2016-05-21T15:12:34.6496207-07:00
+hash: a037c76de7f266477ccffc871ee100f5851ac769a16d6536a5b4f6b987d47f1e
+updated: 2017-03-14T20:08:37.109760173-07:00
 imports:
 - name: github.com/arschles/assert
   version: d21ecd4884be33397d1298c3738b2b4937c7f499
@@ -7,8 +7,38 @@ imports:
   version: 5dd4c9b3432f0ba4858207d51c8861c7cd781bce
   subpackages:
   - tpl
+- name: github.com/golang/protobuf
+  version: 8616e8ee5e20a1704615e6c8d7afcdac06087a67
+  subpackages:
+  - proto
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
   version: cea086319492c3940683ea5e122aa5de70a33923
 - name: github.com/minio/minio-go
   version: 7aabbfe78ae19643a0f3bb4a719caebf9b5cb91a
-devImports: []
+- name: github.com/spf13/cobra
+  version: f62e98d28ab7ad31d707ba837a966378465c7b57
+- name: github.com/spf13/pflag
+  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+- name: golang.org/x/net
+  version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: google.golang.org/grpc
+  version: b0b7afa173ab8030774fdf383cac027c3c5077d2
+  subpackages:
+  - codes
+  - credentials
+  - grpclog
+  - internal
+  - metadata
+  - naming
+  - peer
+  - transport
+testImports: []

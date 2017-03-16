@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package goproxd;
+
+option go_package = "gen";
+
+service GoProxD {
+  rpc GoGet(PackageMeta) returns (FullPackage) {}
+  rpc AdminAddPackage(FullPackage) returns (Empty) {}
+  rpc PackageExists(PackageMeta) returns (PackageExistsResponse) {}
+}
+
+message PackageMeta {
+  string Name = 1;
+  string Version = 2;
+}
+
+message PackageExistsResponse {
+  bool Exists = 1;
+  PackageMeta Meta = 2;
+}
+
+message FullPackage {
+  PackageMeta Metadata = 1;
+  // the entire package tarball
+  bytes Payload = 2;
+}
+
+message Empty {}
