@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"path/filepath"
 
 	"github.com/arschles/goprox/gen"
@@ -38,11 +37,11 @@ func get(out io.Writer, conn *grpc.ClientConn, name, version string) error {
 		return err
 	}
 
-	log.Printf("got package %s@%s", pkg.Metadata.Name, pkg.Metadata.Version)
+	printf("got package %s@%s", pkg.Metadata.Name, pkg.Metadata.Version)
 	untarTo := filepath.Join("vendor", pkg.Metadata.Name)
 	if err := storage.UntarToDisk(bytes.NewBuffer(pkg.Payload), untarTo); err != nil {
 		return err
 	}
-	log.Printf("package written to %s", untarTo)
+	printf("package written to %s", untarTo)
 	return nil
 }

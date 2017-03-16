@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 
 	"github.com/arschles/goprox/gen"
 	"github.com/spf13/cobra"
@@ -33,10 +32,10 @@ func exists(out io.Writer, conn *grpc.ClientConn, name, version string) error {
 		context.Background(),
 		&gen.PackageMeta{Name: name, Version: version},
 	); err != nil {
-		log.Printf("Package %s@%s doesn't exist", name, version)
+		printf("Package %s@%s doesn't exist", name, version)
 		return err
 	}
 
-	log.Printf("Package %s@%s exists!", name, version)
+	printf("Package %s@%s exists!", name, version)
 	return nil
 }

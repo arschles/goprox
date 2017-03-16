@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,7 +22,8 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	hostStr := p.String("host", "localhost:8080", "The host of the goprox server")
 	conn, err := grpc.Dial(*hostStr, grpc.WithInsecure())
 	if err != nil {
-		log.Fatal(err)
+		printf("Error: %s", err)
+		os.Exit(1)
 	}
 	cmd.AddCommand(newGetCommand(out, conn))
 	cmd.AddCommand(newExistsCommand(out, conn))
