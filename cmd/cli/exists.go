@@ -28,14 +28,17 @@ func newExistsCommand(out io.Writer, conn *grpc.ClientConn) *cobra.Command {
 
 func exists(out io.Writer, conn *grpc.ClientConn, name, version string) error {
 	cl := gen.NewGoProxDClient(conn)
-	if _, err := cl.PackageExists(
+	resp, err := cl.PackageExists(
 		context.Background(),
 		&gen.PackageMeta{Name: name, Version: version},
-	); err != nil {
-		printf("Package %s@%s doesn't exist", name, version)
+	)
+	if err != nil {
 		return err
 	}
-
-	printf("Package %s@%s exists!", name, version)
+	if resp.Exists {
+		printf("Package %s@%s exists!", name, version)
+	} else {
+		printf("Package %s@%s doesn't exist :(", name, version)
+	}
 	return nil
 }
