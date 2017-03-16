@@ -2,12 +2,14 @@ package storage
 
 import (
 	"os"
+
+	"github.com/arschles/goprox/files"
 )
 
 // ArchiveToDisk creates an archive of the contents of directory and writes that tarball
 // to the file at target. It creates target if it didn't already exist
 func ArchiveToDisk(directory, target string) error {
-	files, err := getFiles(directory) // TODO: excludes
+	files, err := files.List(directory) // TODO: excludes
 	if err != nil {
 		return err
 	}
