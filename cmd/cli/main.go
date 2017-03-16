@@ -36,10 +36,10 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	if flagDebug {
 		log.Printf("Debugging is on")
 	}
-	cmd.AddCommand(newGetCommand(out, conn))
+	cmd.AddCommand(newGetCommand(conn))
 	cmd.AddCommand(newExistsCommand(out, conn))
 	cmd.AddCommand(newPackageDirCommand(out))
-	// cmd.AddCommand(newUpgradeCommand(out, conn))
+	cmd.AddCommand(newUpgradeCommand(conn))
 	// cmd.AddCommand(newAdminAddPackageCommand(out, conn))
 	return cmd, conn
 }
