@@ -7,8 +7,6 @@ import (
 	"net"
 	"os"
 
-	"io/ioutil"
-
 	"github.com/arschles/goprox/gen"
 	"github.com/arschles/goprox/logs"
 	"github.com/arschles/goprox/storage"
@@ -36,19 +34,7 @@ func (s *server) GoGet(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPac
 	if s.debug {
 		ctx = logs.DebugContext(ctx)
 	}
-	tarball, err := s.fetcher.GetContents(ctx, meta.Name, meta.Version)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: stream this down to the client
-	bytes, err := ioutil.ReadAll(tarball)
-	if err != nil {
-		return nil, err
-	}
-	return &gen.FullPackage{
-		Metadata: meta,
-		Payload:  bytes,
-	}, nil
+	return goGet(ctx, s.fetcher, meta)
 }
 
 func (s *server) UpgradePackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
