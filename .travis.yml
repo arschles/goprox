@@ -2,14 +2,9 @@ language: generic
 branches:
   only:
     - master
-cache:
-  directories:
-    - vendor
 services:
   - docker
 sudo: required
-install:
-  - DOCKER=1 make bootstrap
 script:
   - DOCKER=1 make test build docker-build
 deploy:
