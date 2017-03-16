@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"log"
@@ -34,7 +35,11 @@ func (d DiskFetcher) GetContents(pkgName string, version string) (io.Reader, err
 		return nil, err
 	}
 	log.Printf("files %#v", files)
-	return archiveFiles(repoPrefix, files...)
+	buf := new(bytes.Buffer)
+	if err := archiveFiles(repoPrefix, buf, files...); err != nil {
+		return nil, err
+	}
+	return buf, err
 }
 
 // get a list of relative paths of all files under dir. call filepath.Join(dir, file) for each

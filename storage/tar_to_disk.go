@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"io"
 	"os"
 )
 
@@ -12,18 +11,14 @@ func ArchiveToDisk(directory, target string) error {
 	if err != nil {
 		return err
 	}
-	buf, err := archiveFiles(directory, files...)
-	if err != nil {
-		return err
-	}
+
 	fd, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		return err
 	}
 
-	if _, err := io.Copy(fd, buf); err != nil {
+	if err := archiveFiles(directory, fd, files...); err != nil {
 		return err
 	}
-
 	return nil
 }
