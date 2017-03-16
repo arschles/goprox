@@ -30,7 +30,7 @@ docker-push:
 
 test:
 ifdef DOCKER
-	${DEV_ENV_CMD} go test $$(glide nv)
+	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
 else
 	go test $$(glide nv)
 endif
