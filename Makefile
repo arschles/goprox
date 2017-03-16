@@ -3,27 +3,37 @@ DOCKER_IMAGE_NAME := quay.io/arschles/goprox:${VERSION}
 
 # dockerized development environment variables
 REPO_PATH := github.com/arschles/goprox
-DEV_ENV_IMAGE := quay.io/deis/go-dev:0.9.1
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v0.22.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
-DEV_ENV_PREFIX := docker run --rm -e GO15VENDOREXPERIMENT=1 -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR}
+DEV_ENV_PREFIX := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR}
 DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
-BUILD_ALPINE_CMD_PREFIX := ${DEV_ENV_PREFIX} -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 ${DEV_ENV_IMAGE}
 
-bootstrap:
-	glide install
+SERVER_BUILD_CMD := go build -o cmd/server/goproxd ./cmd/server
+CLI_BUILD_CMD := go build -o cmd/cli/goprox ./cmd/cli
 
-build: 
-	make -C cmd/server build
-	make -C cmd/cli build
+build:
+ifdef DOCKER
+	${DEV_ENV_CMD} ${CLI_BUILD_CMD}
+	${DEV_ENV_CMD} ${SERVER_BUILD_CMD}
+else
+	${CLI_BUILD_CMD}
+	${SERVER_BUILD_CMD}
+endif
 
 docker-build:
-	docker build --rm -t ${DOCKER_IMAGE_NAME} rootfs
+	@echo "nothing to do yet"
+	# docker build --rm -t ${DOCKER_IMAGE_NAME} rootfs
 
 docker-push:
-	docker push ${DOCKER_IMAGE_NAME}
+	@echo "nothing to do yet"
+	# docker push ${DOCKER_IMAGE_NAME}
 
 test:
+ifdef DOCKER
+	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
+else
 	go test $$(glide nv)
+endif
 
 codegen:
 	make -C ./_proto codegen
