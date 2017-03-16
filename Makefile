@@ -11,14 +11,6 @@ DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
 SERVER_BUILD_CMD := go build -o cmd/server/goproxd ./cmd/server
 CLI_BUILD_CMD := go build -o cmd/cli/goprox ./cmd/cli
 
-bootstrap:
-ifdef DOCKER
-	${DEV_ENV_CMD} glide install
-else
-	glide install
-endif
-
-
 build:
 ifdef DOCKER
 	${DEV_ENV_CMD} ${CLI_BUILD_CMD}
