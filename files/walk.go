@@ -15,6 +15,10 @@ var (
 // List lists and returns names of files under dir, as paths relative to dir.
 // Call filepath.Join(dir, file) on each returned file to get the absolute path
 func List(dir string, excludes ...string) ([]string, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return nil, err
+	}
+
 	files := []string{}
 	if err := filepath.Walk(dir, getWalkFunc(dir, &files, excludes...)); err != nil {
 		return nil, err
