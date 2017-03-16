@@ -8,12 +8,17 @@ service GoProxD {
   rpc GoGet(PackageMeta) returns (FullPackage) {}
   rpc UpgradePackage(FullPackage) returns (Empty) {}
   rpc AddPackage(FullPackage) returns (Empty) {}
-  rpc PackageExists(PackageMeta) returns (PackageMeta) {}
+  rpc PackageExists(PackageMeta) returns (PackageExistsResponse) {}
 }
 
 message PackageMeta {
   string Name = 1;
   string Version = 2;
+}
+
+message PackageExistsResponse {
+  bool Exists = 1;
+  PackageMeta Meta = 2;
 }
 
 message FullPackage {
