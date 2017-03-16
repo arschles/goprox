@@ -1,35 +1,39 @@
-hash: a037c76de7f266477ccffc871ee100f5851ac769a16d6536a5b4f6b987d47f1e
-updated: 2017-03-14T20:08:37.109760173-07:00
+hash: 49d5a71817fc37527df6c9296636b96162d6dcf841a85ea1f5f59e1b45466e21
+updated: 2017-03-24T18:43:33.860752892-07:00
 imports:
 - name: github.com/arschles/assert
-  version: d21ecd4884be33397d1298c3738b2b4937c7f499
-- name: github.com/arschles/flexwork
-  version: 5dd4c9b3432f0ba4858207d51c8861c7cd781bce
-  subpackages:
-  - tpl
+  version: bb58b908265b5931732079df03f2818bf2167ba0
 - name: github.com/golang/protobuf
-  version: 8616e8ee5e20a1704615e6c8d7afcdac06087a67
+  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
   subpackages:
   - proto
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
-  version: cea086319492c3940683ea5e122aa5de70a33923
+  version: 8bf4bbfc795e2c7c8a5ea47b707453ed019e2ad4
 - name: github.com/minio/minio-go
-  version: 7aabbfe78ae19643a0f3bb4a719caebf9b5cb91a
+  version: 29b05151452ac74ee9b46c93c2200f8b57331e24
 - name: github.com/spf13/cobra
   version: f62e98d28ab7ad31d707ba837a966378465c7b57
 - name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+  version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: golang.org/x/net
-  version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
+  version: 6c23252515492caf9b228a9d5cabcdbde29f7f82
   subpackages:
   - context
   - http2
   - http2/hpack
+  - idna
   - internal/timeseries
   - lex/httplex
   - trace
+- name: golang.org/x/text
+  version: fc7fa097411d30e6708badff276c4c164425590c
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/grpc
   version: b0b7afa173ab8030774fdf383cac027c3c5077d2
   subpackages:
@@ -41,4 +45,6 @@ imports:
   - naming
   - peer
   - transport
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []

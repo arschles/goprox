@@ -22,23 +22,31 @@ import (
 	"log"
 
 	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/pkg/policy"
 )
 
 func main() {
 	// Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
 	// dummy values, please replace them with original values.
 
-	// Requests are always secure (HTTPS) by default. Set insecure=true to enable insecure (HTTP) access.
+	// Requests are always secure (HTTPS) by default. Set secure=false to enable insecure (HTTP) access.
 	// This boolean value is the last argument for New().
 
-	// New returns an Amazon S3 compatible client object. API copatibality (v2 or v4) is automatically
+	// New returns an Amazon S3 compatible client object. API compatibility (v2 or v4) is automatically
 	// determined based on the Endpoint value.
-	s3Client, err := minio.New("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false)
+	s3Client, err := minio.New("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = s3Client.SetBucketPolicy("my-bucketname", "my-objectprefix", minio.BucketPolicyReadWrite)
+	// s3Client.TraceOn(os.Stderr)
+
+	// Description of policy input.
+	// policy.BucketPolicyNone - Remove any previously applied bucket policy at a prefix.
+	// policy.BucketPolicyReadOnly - Set read-only operations at a prefix.
+	// policy.BucketPolicyWriteOnly - Set write-only operations at a prefix.
+	// policy.BucketPolicyReadWrite - Set read-write operations at a prefix.
+	err = s3Client.SetBucketPolicy("my-bucketname", "my-objectprefix", policy.BucketPolicyReadWrite)
 	if err != nil {
 		log.Fatalln(err)
 	}

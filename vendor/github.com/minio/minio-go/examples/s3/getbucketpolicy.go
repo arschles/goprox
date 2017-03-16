@@ -28,21 +28,28 @@ func main() {
 	// Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
 	// dummy values, please replace them with original values.
 
-	// Requests are always secure (HTTPS) by default. Set insecure=true to enable insecure (HTTP) access.
+	// Requests are always secure (HTTPS) by default. Set secure=false to enable insecure (HTTP) access.
 	// This boolean value is the last argument for New().
 
-	// New returns an Amazon S3 compatible client object. API copatibality (v2 or v4) is automatically
+	// New returns an Amazon S3 compatible client object. API compatibility (v2 or v4) is automatically
 	// determined based on the Endpoint value.
-	s3Client, err := minio.New("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false)
+	s3Client, err := minio.New("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// s3Client.TraceOn(os.Stderr)
 
+	// Fetch the policy at 'my-objectprefix'.
 	policy, err := s3Client.GetBucketPolicy("my-bucketname", "my-objectprefix")
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// Description of policy output.
+	// "none" -  The specified bucket does not have a bucket policy.
+	// "readonly" - Read only operations are allowed.
+	// "writeonly" - Write only operations are allowed.
+	// "readwrite" - both read and write operations are allowed, the bucket is public.
 	log.Println("Success - ", policy)
 }

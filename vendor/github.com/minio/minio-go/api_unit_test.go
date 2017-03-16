@@ -18,14 +18,14 @@ package minio
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/minio/minio-go/pkg/policy"
 )
 
 type customReader struct{}
@@ -76,22 +76,41 @@ func TestGetReaderSize(t *testing.T) {
 	}
 
 	// Create request channel.
-	reqCh := make(chan readRequest)
+	reqCh := make(chan getRequest, 1)
 	// Create response channel.
-	resCh := make(chan readResponse)
+	resCh := make(chan getResponse, 1)
 	// Create done channel.
 	doneCh := make(chan struct{})
-	// objectInfo.
-	objectInfo := ObjectInfo{Size: 10}
-	objectReader := newObject(reqCh, resCh, doneCh, objectInfo)
-	defer objectReader.Close()
 
-	size, err = getReaderSize(objectReader)
+	objectInfo := ObjectInfo{Size: 10}
+	// Create the first request.
+	firstReq := getRequest{
+		isReadOp:   false, // Perform only a HEAD object to get objectInfo.
+		isFirstReq: true,
+	}
+	// Create the expected response.
+	firstRes := getResponse{
+		objectInfo: objectInfo,
+	}
+	// Send the expected response.
+	resCh <- firstRes
+
+	// Test setting size on the first request.
+	objectReaderFirstReq := newObject(reqCh, resCh, doneCh)
+	defer objectReaderFirstReq.Close()
+	// Not checking the response here...just that the reader size is correct.
+	_, err = objectReaderFirstReq.doGetRequest(firstReq)
+	if err != nil {
+		t.Fatal("Error:", err)
+	}
+
+	// Validate that the reader size is the objectInfo size.
+	size, err = getReaderSize(objectReaderFirstReq)
 	if err != nil {
 		t.Fatal("Error:", err)
 	}
 	if size != int64(10) {
-		t.Fatalf("Reader length doesn't match got: %v, want: %v", size, 10)
+		t.Fatalf("Reader length doesn't match got: %d, wanted %d", size, objectInfo.Size)
 	}
 
 	fileReader, err := ioutil.TempFile(os.TempDir(), "prefix")
@@ -181,49 +200,6 @@ func TestTempFile(t *testing.T) {
 	}
 }
 
-// Tests url encoding.
-func TestEncodeURL2Path(t *testing.T) {
-	type urlStrings struct {
-		objName        string
-		encodedObjName string
-	}
-
-	bucketName := "bucketName"
-	want := []urlStrings{
-		{
-			objName:        "本語",
-			encodedObjName: "%E6%9C%AC%E8%AA%9E",
-		},
-		{
-			objName:        "本語.1",
-			encodedObjName: "%E6%9C%AC%E8%AA%9E.1",
-		},
-		{
-			objName:        ">123>3123123",
-			encodedObjName: "%3E123%3E3123123",
-		},
-		{
-			objName:        "test 1 2.txt",
-			encodedObjName: "test%201%202.txt",
-		},
-		{
-			objName:        "test++ 1.txt",
-			encodedObjName: "test%2B%2B%201.txt",
-		},
-	}
-
-	for _, o := range want {
-		u, err := url.Parse(fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucketName, o.objName))
-		if err != nil {
-			t.Fatal("Error:", err)
-		}
-		urlPath := "/" + bucketName + "/" + o.encodedObjName
-		if urlPath != encodeURL2Path(u) {
-			t.Fatal("Error")
-		}
-	}
-}
-
 // Tests error response structure.
 func TestErrorResponse(t *testing.T) {
 	var err error
@@ -246,53 +222,6 @@ func TestErrorResponse(t *testing.T) {
 	errResp = ToErrorResponse(err)
 	if errResp.Code != "InvalidArgument" {
 		t.Fatal("Empty response input should return invalid argument.")
-	}
-}
-
-// Tests signature calculation.
-func TestSignatureCalculation(t *testing.T) {
-	req, err := http.NewRequest("GET", "https://s3.amazonaws.com", nil)
-	if err != nil {
-		t.Fatal("Error:", err)
-	}
-	req = signV4(*req, "", "", "us-east-1")
-	if req.Header.Get("Authorization") != "" {
-		t.Fatal("Error: anonymous credentials should not have Authorization header.")
-	}
-
-	req = preSignV4(*req, "", "", "us-east-1", 0)
-	if strings.Contains(req.URL.RawQuery, "X-Amz-Signature") {
-		t.Fatal("Error: anonymous credentials should not have Signature query resource.")
-	}
-
-	req = signV2(*req, "", "")
-	if req.Header.Get("Authorization") != "" {
-		t.Fatal("Error: anonymous credentials should not have Authorization header.")
-	}
-
-	req = preSignV2(*req, "", "", 0)
-	if strings.Contains(req.URL.RawQuery, "Signature") {
-		t.Fatal("Error: anonymous credentials should not have Signature query resource.")
-	}
-
-	req = signV4(*req, "ACCESS-KEY", "SECRET-KEY", "us-east-1")
-	if req.Header.Get("Authorization") == "" {
-		t.Fatal("Error: normal credentials should have Authorization header.")
-	}
-
-	req = preSignV4(*req, "ACCESS-KEY", "SECRET-KEY", "us-east-1", 0)
-	if !strings.Contains(req.URL.RawQuery, "X-Amz-Signature") {
-		t.Fatal("Error: normal credentials should have Signature query resource.")
-	}
-
-	req = signV2(*req, "ACCESS-KEY", "SECRET-KEY")
-	if req.Header.Get("Authorization") == "" {
-		t.Fatal("Error: normal credentials should have Authorization header.")
-	}
-
-	req = preSignV2(*req, "ACCESS-KEY", "SECRET-KEY", 0)
-	if !strings.Contains(req.URL.RawQuery, "Signature") {
-		t.Fatal("Error: normal credentials should not have Signature query resource.")
 	}
 }
 
@@ -325,7 +254,7 @@ func TestBucketPolicyTypes(t *testing.T) {
 		"invalid":   false,
 	}
 	for bucketPolicy, ok := range want {
-		if BucketPolicy(bucketPolicy).isValidBucketPolicy() != ok {
+		if policy.BucketPolicy(bucketPolicy).IsValidBucketPolicy() != ok {
 			t.Fatal("Error")
 		}
 	}
@@ -333,24 +262,24 @@ func TestBucketPolicyTypes(t *testing.T) {
 
 // Tests optimal part size.
 func TestPartSize(t *testing.T) {
-	totalPartsCount, partSize, lastPartSize, err := optimalPartInfo(5000000000000000000)
+	_, _, _, err := optimalPartInfo(5000000000000000000)
 	if err == nil {
 		t.Fatal("Error: should fail")
 	}
-	totalPartsCount, partSize, lastPartSize, err = optimalPartInfo(5497558138880)
+	totalPartsCount, partSize, lastPartSize, err := optimalPartInfo(5497558138880)
 	if err != nil {
 		t.Fatal("Error: ", err)
 	}
-	if totalPartsCount != 9987 {
+	if totalPartsCount != 9103 {
 		t.Fatalf("Error: expecting total parts count of 9987: got %v instead", totalPartsCount)
 	}
-	if partSize != 550502400 {
+	if partSize != 603979776 {
 		t.Fatalf("Error: expecting part size of 550502400: got %v instead", partSize)
 	}
-	if lastPartSize != 241172480 {
+	if lastPartSize != 134217728 {
 		t.Fatalf("Error: expecting last part size of 241172480: got %v instead", lastPartSize)
 	}
-	totalPartsCount, partSize, lastPartSize, err = optimalPartInfo(5000000000)
+	_, partSize, _, err = optimalPartInfo(5000000000)
 	if err != nil {
 		t.Fatal("Error:", err)
 	}
@@ -361,13 +290,13 @@ func TestPartSize(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error:", err)
 	}
-	if totalPartsCount != 9987 {
+	if totalPartsCount != 9103 {
 		t.Fatalf("Error: expecting total parts count of 9987: got %v instead", totalPartsCount)
 	}
-	if partSize != 550502400 {
+	if partSize != 603979776 {
 		t.Fatalf("Error: expecting part size of 550502400: got %v instead", partSize)
 	}
-	if lastPartSize != 241172480 {
+	if lastPartSize != 134217728 {
 		t.Fatalf("Error: expecting last part size of 241172480: got %v instead", lastPartSize)
 	}
 }

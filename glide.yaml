@@ -2,7 +2,8 @@ package: github.com/arschles/goprox
 import:
 - package: github.com/minio/minio-go
 - package: github.com/arschles/assert
-- package: github.com/arschles/flexwork
-  version: 5dd4c9b3432f0ba4858207d51c8861c7cd781bce
 - package: google.golang.org/grpc
+  version: b0b7afa173ab8030774fdf383cac027c3c5077d2
 - package: github.com/spf13/cobra
+  version: f62e98d28ab7ad31d707ba837a966378465c7b57
+- package: gopkg.in/yaml.v2

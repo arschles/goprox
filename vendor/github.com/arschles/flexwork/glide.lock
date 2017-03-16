@@ -1,6 +1,0 @@
-hash: 822e741f0284d1dc62024ce4a450a5df675c20dca8f6839facb72d55f44f1067
-updated: 2016-04-22T22:36:22.214084625-07:00
-imports:
-- name: github.com/arschles/assert
-  version: d21ecd4884be33397d1298c3738b2b4937c7f499
-devImports: []

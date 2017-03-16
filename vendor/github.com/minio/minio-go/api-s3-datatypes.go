@@ -41,8 +41,37 @@ type commonPrefix struct {
 	Prefix string
 }
 
+// listBucketResult container for listObjects V2 response.
+type listBucketV2Result struct {
+	// A response can contain CommonPrefixes only if you have
+	// specified a delimiter.
+	CommonPrefixes []commonPrefix
+	// Metadata about each object returned.
+	Contents  []ObjectInfo
+	Delimiter string
+
+	// Encoding type used to encode object keys in the response.
+	EncodingType string
+
+	// A flag that indicates whether or not ListObjects returned all of the results
+	// that satisfied the search criteria.
+	IsTruncated bool
+	MaxKeys     int64
+	Name        string
+
+	// Hold the token that will be sent in the next request to fetch the next group of keys
+	NextContinuationToken string
+
+	ContinuationToken string
+	Prefix            string
+
+	// FetchOwner and StartAfter are currently not used
+	FetchOwner string
+	StartAfter string
+}
+
 // listBucketResult container for listObjects response.
-type listBucketResult struct {
+type ListBucketResult struct {
 	// A response can contain CommonPrefixes only if you have
 	// specified a delimiter.
 	CommonPrefixes []commonPrefix
@@ -74,7 +103,7 @@ type listBucketResult struct {
 }
 
 // listMultipartUploadsResult container for ListMultipartUploads response
-type listMultipartUploadsResult struct {
+type ListMultipartUploadsResult struct {
 	Bucket             string
 	KeyMarker          string
 	UploadIDMarker     string `xml:"UploadIdMarker"`
@@ -103,7 +132,7 @@ type copyObjectResult struct {
 }
 
 // objectPart container for particular part of an object.
-type objectPart struct {
+type ObjectPart struct {
 	// Part number identifies the part.
 	PartNumber int
 
@@ -119,7 +148,7 @@ type objectPart struct {
 }
 
 // listObjectPartsResult container for ListObjectParts response.
-type listObjectPartsResult struct {
+type ListObjectPartsResult struct {
 	Bucket   string
 	Key      string
 	UploadID string `xml:"UploadId"`
@@ -134,7 +163,7 @@ type listObjectPartsResult struct {
 
 	// Indicates whether the returned list of parts is truncated.
 	IsTruncated bool
-	ObjectParts []objectPart `xml:"Part"`
+	ObjectParts []ObjectPart `xml:"Part"`
 
 	EncodingType string
 }
@@ -158,7 +187,7 @@ type completeMultipartUploadResult struct {
 
 // completePart sub container lists individual part numbers and their
 // md5sum, part of completeMultipartUpload.
-type completePart struct {
+type CompletePart struct {
 	XMLName xml.Name `xml:"http://s3.amazonaws.com/doc/2006-03-01/ Part" json:"-"`
 
 	// Part number identifies the part.
@@ -169,11 +198,47 @@ type completePart struct {
 // completeMultipartUpload container for completing multipart upload.
 type completeMultipartUpload struct {
 	XMLName xml.Name       `xml:"http://s3.amazonaws.com/doc/2006-03-01/ CompleteMultipartUpload" json:"-"`
-	Parts   []completePart `xml:"Part"`
+	Parts   []CompletePart `xml:"Part"`
 }
 
 // createBucketConfiguration container for bucket configuration.
 type createBucketConfiguration struct {
 	XMLName  xml.Name `xml:"http://s3.amazonaws.com/doc/2006-03-01/ CreateBucketConfiguration" json:"-"`
 	Location string   `xml:"LocationConstraint"`
+}
+
+// deleteObject container for Delete element in MultiObjects Delete XML request
+type deleteObject struct {
+	Key       string
+	VersionID string `xml:"VersionId,omitempty"`
+}
+
+// deletedObject container for Deleted element in MultiObjects Delete XML response
+type deletedObject struct {
+	Key       string
+	VersionID string `xml:"VersionId,omitempty"`
+	// These fields are ignored.
+	DeleteMarker          bool
+	DeleteMarkerVersionID string
+}
+
+// nonDeletedObject container for Error element (failed deletion) in MultiObjects Delete XML response
+type nonDeletedObject struct {
+	Key     string
+	Code    string
+	Message string
+}
+
+// deletedMultiObjects container for MultiObjects Delete XML request
+type deleteMultiObjects struct {
+	XMLName xml.Name `xml:"Delete"`
+	Quiet   bool
+	Objects []deleteObject `xml:"Object"`
+}
+
+// deletedMultiObjectsResult container for MultiObjects Delete XML response
+type deleteMultiObjectsResult struct {
+	XMLName          xml.Name           `xml:"DeleteResult"`
+	DeletedObjects   []deletedObject    `xml:"Deleted"`
+	UnDeletedObjects []nonDeletedObject `xml:"Error"`
 }
