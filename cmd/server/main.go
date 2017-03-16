@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 
 	"github.com/arschles/goprox/gen"
+	"github.com/arschles/goprox/logs"
 	"github.com/arschles/goprox/storage"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -25,12 +26,17 @@ var (
 
 // server implements the GoProxDServer interface
 type server struct {
+	debug   bool
+	logger  *log.Logger
 	fetcher storage.Fetcher
 }
 
 // GetPackages is the AdminServer interface implementation
 func (s *server) GoGet(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPackage, error) {
-	tarball, err := s.fetcher.GetContents(meta.Name, meta.Version)
+	if s.debug {
+		ctx = logs.DebugContext(ctx)
+	}
+	tarball, err := s.fetcher.GetContents(ctx, meta.Name, meta.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +63,16 @@ func (s *server) PackageExists(ctx context.Context, meta *gen.PackageMeta) (*gen
 	return meta, nil
 }
 
-func startServer(fetcher storage.Fetcher, port int) error {
+func startServer(debug bool, fetcher storage.Fetcher, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
 	srv := grpc.NewServer()
-	gen.RegisterGoProxDServer(srv, &server{fetcher: fetcher})
+	gen.RegisterGoProxDServer(srv, &server{
+		debug:   true,
+		fetcher: fetcher,
+	})
 	return srv.Serve(lis)
 }
 
@@ -73,5 +82,5 @@ func main() {
 		Excludes: []string{"\\.git/*", "vendor/*"},
 	}
 	log.Printf("Serving goproxd on port 8080")
-	log.Fatal(startServer(fetcher, 8080))
+	log.Fatal(startServer(true, fetcher, 8080))
 }

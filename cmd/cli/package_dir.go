@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/arschles/goprox/logs"
 	"github.com/arschles/goprox/storage"
 	"github.com/spf13/cobra"
 )
@@ -44,14 +46,18 @@ func packageDir(packageName string) error {
 	}
 	fullPath := filepath.Join(gopath, "src", packageName)
 
-	printf("checking if %s exists", fullPath)
+	debugf("Checking if %s exists", fullPath)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		return errNoSuchPackage{pkg: packageName}
 	}
 	target := strings.Replace(packageName, string(os.PathSeparator), "-", -1) + packageFileExtension
 	target = strings.Trim(target, "-")
-	printf("Packaging %s into %s", packageName, target)
-	if err := storage.ArchiveToDisk(fullPath, target); err != nil {
+	printf("Packaging %s into %s...", packageName, target)
+	ctx := context.Background()
+	if flagDebug {
+		ctx = logs.DebugContext(ctx)
+	}
+	if err := storage.ArchiveToDisk(ctx, fullPath, target); err != nil {
 		return err
 	}
 	printf("Packaged %s into %s", packageName, target)

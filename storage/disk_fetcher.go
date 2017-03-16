@@ -2,11 +2,12 @@ package storage
 
 import (
 	"bytes"
+	"context"
 	"io"
-	"log"
 	"path/filepath"
 
 	"github.com/arschles/goprox/files"
+	"github.com/arschles/goprox/logs"
 )
 
 const (
@@ -21,15 +22,16 @@ type DiskFetcher struct {
 }
 
 // GetContents is the fetcher interface implementation
-func (d DiskFetcher) GetContents(pkgName string, version string) (io.Reader, error) {
-	log.Printf("package %s", pkgName)
+func (d DiskFetcher) GetContents(ctx context.Context, pkgName string, version string) (io.Reader, error) {
+	logger := logs.FromContext(ctx)
+	logger.Printf("Package %s", pkgName)
 	goPathSrcDir := filepath.Join(d.Gopath, srcDir)
 	repoPrefix := filepath.Join(goPathSrcDir, pkgName)
-	files, err := files.List(repoPrefix, d.Excludes...)
+	files, err := files.List(ctx, repoPrefix, d.Excludes...)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("files %#v", files)
+	logger.Printf("Files: %#v", files)
 	buf := new(bytes.Buffer)
 	if err := archiveFiles(repoPrefix, buf, files...); err != nil {
 		return nil, err

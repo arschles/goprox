@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,6 +11,10 @@ import (
 
 const (
 	appName = "goprox"
+)
+
+var (
+	flagDebug = false
 )
 
 func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
@@ -24,6 +29,12 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	if err != nil {
 		printf("Error: %s", err)
 		os.Exit(1)
+	}
+	persistentFlags := cmd.PersistentFlags()
+	persistentFlags.BoolVar(&flagDebug, "debug", false, "enable verbose output")
+	persistentFlags.Parse(os.Args[1:])
+	if flagDebug {
+		log.Printf("Debugging is on")
 	}
 	cmd.AddCommand(newGetCommand(out, conn))
 	cmd.AddCommand(newExistsCommand(out, conn))
