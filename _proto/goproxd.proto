@@ -6,8 +6,7 @@ option go_package = "gen";
 
 service GoProxD {
   rpc GoGet(PackageMeta) returns (FullPackage) {}
-  rpc UpgradePackage(FullPackage) returns (Empty) {}
-  rpc AddPackage(FullPackage) returns (Empty) {}
+  rpc AdminAddPackage(FullPackage) returns (Empty) {}
   rpc PackageExists(PackageMeta) returns (PackageExistsResponse) {}
 }
 

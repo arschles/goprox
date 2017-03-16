@@ -25,11 +25,8 @@ func (s *server) GoGet(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPac
 	return goGet(ctx, s.fetcher, meta)
 }
 
-func (s *server) UpgradePackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
-	return &gen.Empty{}, nil
-}
-
-func (s *server) AddPackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
+func (s *server) AdminAddPackage(context.Context, *gen.FullPackage) (*gen.Empty, error) {
+	// TODO: implement!
 	return &gen.Empty{}, nil
 }
 
