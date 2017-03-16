@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/arschles/goprox/storage"
@@ -13,6 +13,12 @@ import (
 )
 
 const packageFileExtension = ".tar"
+
+type errNoSuchPackage struct{ pkg string }
+
+func (e errNoSuchPackage) Error() string {
+	return fmt.Sprintf("%s does not exist", e.pkg)
+}
 
 func newPackageDirCommand(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
@@ -23,9 +29,6 @@ func newPackageDirCommand(out io.Writer) *cobra.Command {
 				return errors.New("package path is required")
 			}
 			path := args[0]
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				return fmt.Errorf("%s does not exist on disk", path)
-			}
 			return packageDir(path)
 		},
 	}
@@ -33,12 +36,24 @@ func newPackageDirCommand(out io.Writer) *cobra.Command {
 	return cmd
 }
 
-func packageDir(path string) error {
-	target := strings.Replace(path, string(os.PathSeparator), "-", -1) + packageFileExtension
-	log.Printf("Packaging %s into %s", path, target)
-	if err := storage.ArchiveToDisk(path, target); err != nil {
+func packageDir(packageName string) error {
+	packageName = strings.Trim(packageName, "/")
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		return errors.New("GOPATH is not set")
+	}
+	fullPath := filepath.Join(gopath, "src", packageName)
+
+	printf("checking if %s exists", fullPath)
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return errNoSuchPackage{pkg: packageName}
+	}
+	target := strings.Replace(packageName, string(os.PathSeparator), "-", -1) + packageFileExtension
+	target = strings.Trim(target, "-")
+	printf("Packaging %s into %s", packageName, target)
+	if err := storage.ArchiveToDisk(fullPath, target); err != nil {
 		return err
 	}
-	log.Printf("Packaged %s into %s", path, target)
+	printf("Packaged %s into %s", packageName, target)
 	return nil
 }
