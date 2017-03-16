@@ -19,15 +19,18 @@ _cgo_export.*
 
 _testmain.go
 
-*.exe
-*.test
-*.prof
-goprox
-goprox-cli
-rootfs/bin/goprox
-cmd/cli/goprox
-cmd/cli/cli
-cmd/server/goproxd
-cmd/server/server
-cmd/server/rootfs/bin/goproxd
+# Vim files https://github.com/github/gitignore/blob/master/Global/Vim.gitignore
+# swap
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+# auto-generated tag files
+tags
 
+*.exe
+
+cobra.test
