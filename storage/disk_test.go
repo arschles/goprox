@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +21,7 @@ func TestUntarToDisk(t *testing.T) {
 	testDataDir, err := tests.DataDir()
 	assert.NoErr(t, err)
 
-	testDataFiles, err := files.List(testDataDir)
+	testDataFiles, err := files.List(context.Background(), testDataDir)
 	assert.NoErr(t, err)
 	buf := new(bytes.Buffer)
 	assert.NoErr(t, archiveFiles(testDataDir, buf, testDataFiles...))
