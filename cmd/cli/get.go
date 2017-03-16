@@ -32,7 +32,7 @@ func newGetCommand(out io.Writer, conn *grpc.ClientConn) *cobra.Command {
 
 func get(out io.Writer, conn *grpc.ClientConn, name, version string) error {
 	cl := gen.NewGoProxDClient(conn)
-	pkg, err := cl.GoGet(context.Background(), &gen.PackageMeta{Name: name, Version: version})
+	pkg, err := cl.GetPackage(context.Background(), &gen.PackageMeta{Name: name, Version: version})
 	if err != nil {
 		return err
 	}

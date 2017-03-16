@@ -18,7 +18,7 @@ type server struct {
 }
 
 // GetPackages is the AdminServer interface implementation
-func (s *server) GoGet(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPackage, error) {
+func (s *server) GetPackage(ctx context.Context, meta *gen.PackageMeta) (*gen.FullPackage, error) {
 	if s.debug {
 		ctx = logs.DebugContext(ctx)
 	}
