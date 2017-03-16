@@ -39,8 +39,8 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	cmd.AddCommand(newGetCommand(out, conn))
 	cmd.AddCommand(newExistsCommand(out, conn))
 	cmd.AddCommand(newPackageDirCommand(out))
-	cmd.AddCommand(newUpgradeCommand(out, conn))
-	cmd.AddCommand(newAdminAddPackageCommand(out, conn))
+	// cmd.AddCommand(newUpgradeCommand(out, conn))
+	// cmd.AddCommand(newAdminAddPackageCommand(out, conn))
 	return cmd, conn
 }
 
