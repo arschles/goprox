@@ -9,9 +9,9 @@ services:
   - docker
 sudo: required
 install:
-  - make bootstrap
+  - DOCKER=1 make bootstrap
 script:
-  - make test build-alpine docker-build
+  - DOCKER=1 make test build docker-build
 deploy:
   provider: script
   script: _scripts/deploy.sh
