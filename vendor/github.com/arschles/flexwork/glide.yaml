@@ -1,3 +1,0 @@
-package: github.com/arschles/flexwork
-import:
-- package: github.com/arschles/assert

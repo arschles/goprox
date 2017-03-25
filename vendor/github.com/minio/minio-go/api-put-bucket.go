@@ -26,6 +26,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
+
+	"github.com/minio/minio-go/pkg/policy"
+	"github.com/minio/minio-go/pkg/s3signer"
 )
 
 /// Bucket operations
@@ -87,8 +91,8 @@ func (c Client) makeBucketRequest(bucketName string, location string) (*http.Req
 	// is the preferred method here. The final location of the
 	// 'bucket' is provided through XML LocationConstraint data with
 	// the request.
-	targetURL := *c.endpointURL
-	targetURL.Path = "/" + bucketName + "/"
+	targetURL := c.endpointURL
+	targetURL.Path = path.Join(bucketName, "") + "/"
 
 	// get a new HTTP request for the method.
 	req, err := http.NewRequest("PUT", targetURL.String(), nil)
@@ -128,9 +132,9 @@ func (c Client) makeBucketRequest(bucketName string, location string) (*http.Req
 	if c.signature.isV4() {
 		// Signature calculated for MakeBucket request should be for 'us-east-1',
 		// regardless of the bucket's location constraint.
-		req = signV4(*req, c.accessKeyID, c.secretAccessKey, "us-east-1")
+		req = s3signer.SignV4(*req, c.accessKeyID, c.secretAccessKey, "us-east-1")
 	} else if c.signature.isV2() {
-		req = signV2(*req, c.accessKeyID, c.secretAccessKey)
+		req = s3signer.SignV2(*req, c.accessKeyID, c.secretAccessKey)
 	}
 
 	// Return signed request.
@@ -145,7 +149,7 @@ func (c Client) makeBucketRequest(bucketName string, location string) (*http.Req
 //  readonly - anonymous get access for everyone at a given object prefix.
 //  readwrite - anonymous list/put/delete access to a given object prefix.
 //  writeonly - anonymous put/delete access to a given object prefix.
-func (c Client) SetBucketPolicy(bucketName string, objectPrefix string, bucketPolicy BucketPolicy) error {
+func (c Client) SetBucketPolicy(bucketName string, objectPrefix string, bucketPolicy policy.BucketPolicy) error {
 	// Input validation.
 	if err := isValidBucketName(bucketName); err != nil {
 		return err
@@ -153,73 +157,35 @@ func (c Client) SetBucketPolicy(bucketName string, objectPrefix string, bucketPo
 	if err := isValidObjectPrefix(objectPrefix); err != nil {
 		return err
 	}
-	if !bucketPolicy.isValidBucketPolicy() {
+	if !bucketPolicy.IsValidBucketPolicy() {
 		return ErrInvalidArgument(fmt.Sprintf("Invalid bucket policy provided. %s", bucketPolicy))
 	}
-	policy, err := c.getBucketPolicy(bucketName, objectPrefix)
+	policyInfo, err := c.getBucketPolicy(bucketName, objectPrefix)
 	if err != nil {
 		return err
 	}
-	// For bucket policy set to 'none' we need to remove the policy.
-	if bucketPolicy == BucketPolicyNone && policy.Statements == nil {
-		// No policies to set, return success.
+
+	if bucketPolicy == policy.BucketPolicyNone && policyInfo.Statements == nil {
+		// As the request is for removing policy and the bucket
+		// has empty policy statements, just return success.
 		return nil
 	}
-	// Remove any previous policies at this path.
-	policy.Statements = removeBucketPolicyStatement(policy.Statements, bucketName, objectPrefix)
 
-	bucketResourceStatement := &Statement{}
-	objectResourceStatement := &Statement{}
-	if bucketPolicy == BucketPolicyReadWrite {
-		// Read write policy.
-		bucketResourceStatement.Effect = "Allow"
-		bucketResourceStatement.Principal.AWS = []string{"*"}
-		bucketResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName)}
-		bucketResourceStatement.Actions = readWriteBucketActions
-		objectResourceStatement.Effect = "Allow"
-		objectResourceStatement.Principal.AWS = []string{"*"}
-		objectResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName+"/"+objectPrefix+"*")}
-		objectResourceStatement.Actions = readWriteObjectActions
-		// Save the read write policy.
-		policy.Statements = append(policy.Statements, *bucketResourceStatement, *objectResourceStatement)
-	} else if bucketPolicy == BucketPolicyReadOnly {
-		// Read only policy.
-		bucketResourceStatement.Effect = "Allow"
-		bucketResourceStatement.Principal.AWS = []string{"*"}
-		bucketResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName)}
-		bucketResourceStatement.Actions = readOnlyBucketActions
-		objectResourceStatement.Effect = "Allow"
-		objectResourceStatement.Principal.AWS = []string{"*"}
-		objectResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName+"/"+objectPrefix+"*")}
-		objectResourceStatement.Actions = readOnlyObjectActions
-		// Save the read only policy.
-		policy.Statements = append(policy.Statements, *bucketResourceStatement, *objectResourceStatement)
-	} else if bucketPolicy == BucketPolicyWriteOnly {
-		// Write only policy.
-		bucketResourceStatement.Effect = "Allow"
-		bucketResourceStatement.Principal.AWS = []string{"*"}
-		bucketResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName)}
-		bucketResourceStatement.Actions = writeOnlyBucketActions
-		objectResourceStatement.Effect = "Allow"
-		objectResourceStatement.Principal.AWS = []string{"*"}
-		objectResourceStatement.Resources = []string{fmt.Sprintf("%s%s", awsResourcePrefix, bucketName+"/"+objectPrefix+"*")}
-		objectResourceStatement.Actions = writeOnlyObjectActions
-		// Save the write only policy.
-		policy.Statements = append(policy.Statements, *bucketResourceStatement, *objectResourceStatement)
-	}
+	policyInfo.Statements = policy.SetPolicy(policyInfo.Statements, bucketPolicy, bucketName, objectPrefix)
+
 	// Save the updated policies.
-	return c.putBucketPolicy(bucketName, policy)
+	return c.putBucketPolicy(bucketName, policyInfo)
 }
 
 // Saves a new bucket policy.
-func (c Client) putBucketPolicy(bucketName string, policy BucketAccessPolicy) error {
+func (c Client) putBucketPolicy(bucketName string, policyInfo policy.BucketAccessPolicy) error {
 	// Input validation.
 	if err := isValidBucketName(bucketName); err != nil {
 		return err
 	}
 
 	// If there are no policy statements, we should remove entire policy.
-	if len(policy.Statements) == 0 {
+	if len(policyInfo.Statements) == 0 {
 		return c.removeBucketPolicy(bucketName)
 	}
 
@@ -228,7 +194,7 @@ func (c Client) putBucketPolicy(bucketName string, policy BucketAccessPolicy) er
 	urlValues := make(url.Values)
 	urlValues.Set("policy", "")
 
-	policyBytes, err := json.Marshal(&policy)
+	policyBytes, err := json.Marshal(&policyInfo)
 	if err != nil {
 		return err
 	}
@@ -255,4 +221,73 @@ func (c Client) putBucketPolicy(bucketName string, policy BucketAccessPolicy) er
 		}
 	}
 	return nil
+}
+
+// Removes all policies on a bucket.
+func (c Client) removeBucketPolicy(bucketName string) error {
+	// Input validation.
+	if err := isValidBucketName(bucketName); err != nil {
+		return err
+	}
+	// Get resources properly escaped and lined up before
+	// using them in http request.
+	urlValues := make(url.Values)
+	urlValues.Set("policy", "")
+
+	// Execute DELETE on objectName.
+	resp, err := c.executeMethod("DELETE", requestMetadata{
+		bucketName:  bucketName,
+		queryValues: urlValues,
+	})
+	defer closeResponse(resp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SetBucketNotification saves a new bucket notification.
+func (c Client) SetBucketNotification(bucketName string, bucketNotification BucketNotification) error {
+	// Input validation.
+	if err := isValidBucketName(bucketName); err != nil {
+		return err
+	}
+
+	// Get resources properly escaped and lined up before
+	// using them in http request.
+	urlValues := make(url.Values)
+	urlValues.Set("notification", "")
+
+	notifBytes, err := xml.Marshal(bucketNotification)
+	if err != nil {
+		return err
+	}
+
+	notifBuffer := bytes.NewReader(notifBytes)
+	reqMetadata := requestMetadata{
+		bucketName:         bucketName,
+		queryValues:        urlValues,
+		contentBody:        notifBuffer,
+		contentLength:      int64(len(notifBytes)),
+		contentMD5Bytes:    sumMD5(notifBytes),
+		contentSHA256Bytes: sum256(notifBytes),
+	}
+
+	// Execute PUT to upload a new bucket notification.
+	resp, err := c.executeMethod("PUT", reqMetadata)
+	defer closeResponse(resp)
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		if resp.StatusCode != http.StatusOK {
+			return httpRespToErrorResponse(resp, bucketName, "")
+		}
+	}
+	return nil
+}
+
+// RemoveAllBucketNotification - Remove bucket notification clears all previously specified config
+func (c Client) RemoveAllBucketNotification(bucketName string) error {
+	return c.SetBucketNotification(bucketName, BucketNotification{})
 }

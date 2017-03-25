@@ -40,6 +40,7 @@ func newRootCmd(out io.Writer) (*cobra.Command, *grpc.ClientConn) {
 	cmd.AddCommand(newExistsCommand(out, conn))
 	cmd.AddCommand(newPackageDirCommand(out))
 	cmd.AddCommand(newUpgradeCommand(conn))
+	cmd.AddCommand(newCurrentDepsCommand())
 	// cmd.AddCommand(newAdminAddPackageCommand(out, conn))
 	return cmd, conn
 }

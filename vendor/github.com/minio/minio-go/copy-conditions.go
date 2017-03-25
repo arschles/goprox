@@ -41,15 +41,17 @@ type CopyConditions struct {
 	conditions []copyCondition
 }
 
-// NewCopyConditions - Instantiate new list of conditions.
+// NewCopyConditions - Instantiate new list of conditions.  This
+// function is left behind for backward compatibility. The idiomatic
+// way to set an empty set of copy conditions is,
+//    ``copyConditions := CopyConditions{}``.
+//
 func NewCopyConditions() CopyConditions {
-	return CopyConditions{
-		conditions: make([]copyCondition, 0),
-	}
+	return CopyConditions{}
 }
 
 // SetMatchETag - set match etag.
-func (c CopyConditions) SetMatchETag(etag string) error {
+func (c *CopyConditions) SetMatchETag(etag string) error {
 	if etag == "" {
 		return ErrInvalidArgument("ETag cannot be empty.")
 	}
@@ -61,7 +63,7 @@ func (c CopyConditions) SetMatchETag(etag string) error {
 }
 
 // SetMatchETagExcept - set match etag except.
-func (c CopyConditions) SetMatchETagExcept(etag string) error {
+func (c *CopyConditions) SetMatchETagExcept(etag string) error {
 	if etag == "" {
 		return ErrInvalidArgument("ETag cannot be empty.")
 	}
@@ -73,7 +75,7 @@ func (c CopyConditions) SetMatchETagExcept(etag string) error {
 }
 
 // SetUnmodified - set unmodified time since.
-func (c CopyConditions) SetUnmodified(modTime time.Time) error {
+func (c *CopyConditions) SetUnmodified(modTime time.Time) error {
 	if modTime.IsZero() {
 		return ErrInvalidArgument("Modified since cannot be empty.")
 	}
@@ -85,7 +87,7 @@ func (c CopyConditions) SetUnmodified(modTime time.Time) error {
 }
 
 // SetModified - set modified time since.
-func (c CopyConditions) SetModified(modTime time.Time) error {
+func (c *CopyConditions) SetModified(modTime time.Time) error {
 	if modTime.IsZero() {
 		return ErrInvalidArgument("Modified since cannot be empty.")
 	}

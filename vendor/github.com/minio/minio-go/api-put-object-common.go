@@ -17,11 +17,10 @@
 package minio
 
 import (
-	"crypto/md5"
-	"crypto/sha256"
 	"fmt"
 	"hash"
 	"io"
+	"io/ioutil"
 	"math"
 	"os"
 )
@@ -45,18 +44,17 @@ func isReadAt(reader io.Reader) (ok bool) {
 }
 
 // shouldUploadPart - verify if part should be uploaded.
-func shouldUploadPart(objPart objectPart, objectParts map[int]objectPart) bool {
+func shouldUploadPart(objPart ObjectPart, uploadReq uploadPartReq) bool {
 	// If part not found should upload the part.
-	uploadedPart, found := objectParts[objPart.PartNumber]
-	if !found {
+	if uploadReq.Part == nil {
 		return true
 	}
 	// if size mismatches should upload the part.
-	if objPart.Size != uploadedPart.Size {
+	if objPart.Size != uploadReq.Part.Size {
 		return true
 	}
 	// if md5sum mismatches should upload the part.
-	if objPart.ETag != uploadedPart.ETag {
+	if objPart.ETag != uploadReq.Part.ETag {
 		return true
 	}
 	return false
@@ -69,7 +67,7 @@ func shouldUploadPart(objPart objectPart, objectParts map[int]objectPart) bool {
 // object storage it will have the following parameters as constants.
 //
 //  maxPartsCount - 10000
-//  minPartSize - 5MiB
+//  minPartSize - 64MiB
 //  maxMultipartPutObjectSize - 5TiB
 //
 func optimalPartInfo(objectSize int64) (totalPartsCount int, partSize int64, lastPartSize int64, err error) {
@@ -101,15 +99,10 @@ func optimalPartInfo(objectSize int64) (totalPartsCount int, partSize int64, las
 //
 // Stages reads from offsets into the buffer, if buffer is nil it is
 // initialized to optimalBufferSize.
-func (c Client) hashCopyBuffer(writer io.Writer, reader io.ReaderAt, buf []byte) (md5Sum, sha256Sum []byte, size int64, err error) {
-	// MD5 and SHA256 hasher.
-	var hashMD5, hashSHA256 hash.Hash
-	// MD5 and SHA256 hasher.
-	hashMD5 = md5.New()
-	hashWriter := io.MultiWriter(writer, hashMD5)
-	if c.signature.isV4() {
-		hashSHA256 = sha256.New()
-		hashWriter = io.MultiWriter(writer, hashMD5, hashSHA256)
+func hashCopyBuffer(hashAlgorithms map[string]hash.Hash, hashSums map[string][]byte, writer io.Writer, reader io.ReaderAt, buf []byte) (size int64, err error) {
+	hashWriter := writer
+	for _, v := range hashAlgorithms {
+		hashWriter = io.MultiWriter(hashWriter, v)
 	}
 
 	// Buffer is nil, initialize.
@@ -126,15 +119,15 @@ func (c Client) hashCopyBuffer(writer io.Writer, reader io.ReaderAt, buf []byte)
 		readAtSize, rerr := reader.ReadAt(buf, readAtOffset)
 		if rerr != nil {
 			if rerr != io.EOF {
-				return nil, nil, 0, rerr
+				return 0, rerr
 			}
 		}
 		writeSize, werr := hashWriter.Write(buf[:readAtSize])
 		if werr != nil {
-			return nil, nil, 0, werr
+			return 0, werr
 		}
 		if readAtSize != writeSize {
-			return nil, nil, 0, fmt.Errorf("Read size was not completely written to writer. wanted %d, got %d - %s", readAtSize, writeSize, reportIssue)
+			return 0, fmt.Errorf("Read size was not completely written to writer. wanted %d, got %d - %s", readAtSize, writeSize, reportIssue)
 		}
 		readAtOffset += int64(writeSize)
 		size += int64(writeSize)
@@ -143,52 +136,17 @@ func (c Client) hashCopyBuffer(writer io.Writer, reader io.ReaderAt, buf []byte)
 		}
 	}
 
-	// Finalize md5 sum and sha256 sum.
-	md5Sum = hashMD5.Sum(nil)
-	if c.signature.isV4() {
-		sha256Sum = hashSHA256.Sum(nil)
+	for k, v := range hashAlgorithms {
+		hashSums[k] = v.Sum(nil)
 	}
-	return md5Sum, sha256Sum, size, err
+	return size, err
 }
 
-// hashCopy is identical to hashCopyN except that it doesn't take
-// any size argument.
-func (c Client) hashCopy(writer io.Writer, reader io.Reader) (md5Sum, sha256Sum []byte, size int64, err error) {
-	// MD5 and SHA256 hasher.
-	var hashMD5, hashSHA256 hash.Hash
-	// MD5 and SHA256 hasher.
-	hashMD5 = md5.New()
-	hashWriter := io.MultiWriter(writer, hashMD5)
-	if c.signature.isV4() {
-		hashSHA256 = sha256.New()
-		hashWriter = io.MultiWriter(writer, hashMD5, hashSHA256)
-	}
-
-	// Using copyBuffer to copy in large buffers, default buffer
-	// for io.Copy of 32KiB is too small.
-	size, err = io.Copy(hashWriter, reader)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	// Finalize md5 sum and sha256 sum.
-	md5Sum = hashMD5.Sum(nil)
-	if c.signature.isV4() {
-		sha256Sum = hashSHA256.Sum(nil)
-	}
-	return md5Sum, sha256Sum, size, err
-}
-
-// hashCopyN - Calculates Md5sum and SHA256sum for up to partSize amount of bytes.
-func (c Client) hashCopyN(writer io.Writer, reader io.Reader, partSize int64) (md5Sum, sha256Sum []byte, size int64, err error) {
-	// MD5 and SHA256 hasher.
-	var hashMD5, hashSHA256 hash.Hash
-	// MD5 and SHA256 hasher.
-	hashMD5 = md5.New()
-	hashWriter := io.MultiWriter(writer, hashMD5)
-	if c.signature.isV4() {
-		hashSHA256 = sha256.New()
-		hashWriter = io.MultiWriter(writer, hashMD5, hashSHA256)
+// hashCopyN - Calculates chosen hashes up to partSize amount of bytes.
+func hashCopyN(hashAlgorithms map[string]hash.Hash, hashSums map[string][]byte, writer io.Writer, reader io.Reader, partSize int64) (size int64, err error) {
+	hashWriter := writer
+	for _, v := range hashAlgorithms {
+		hashWriter = io.MultiWriter(hashWriter, v)
 	}
 
 	// Copies to input at writer.
@@ -196,80 +154,98 @@ func (c Client) hashCopyN(writer io.Writer, reader io.Reader, partSize int64) (m
 	if err != nil {
 		// If not EOF return error right here.
 		if err != io.EOF {
-			return nil, nil, 0, err
+			return 0, err
 		}
 	}
 
-	// Finalize md5shum and sha256 sum.
-	md5Sum = hashMD5.Sum(nil)
-	if c.signature.isV4() {
-		sha256Sum = hashSHA256.Sum(nil)
+	for k, v := range hashAlgorithms {
+		hashSums[k] = v.Sum(nil)
 	}
-	return md5Sum, sha256Sum, size, err
+	return size, err
 }
 
 // getUploadID - fetch upload id if already present for an object name
 // or initiate a new request to fetch a new upload id.
-func (c Client) getUploadID(bucketName, objectName, contentType string) (uploadID string, isNew bool, err error) {
+func (c Client) newUploadID(bucketName, objectName string, metaData map[string][]string) (uploadID string, err error) {
 	// Input validation.
 	if err := isValidBucketName(bucketName); err != nil {
-		return "", false, err
+		return "", err
 	}
 	if err := isValidObjectName(objectName); err != nil {
-		return "", false, err
+		return "", err
 	}
 
-	// Set content Type to default if empty string.
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
-
-	// Find upload id for previous upload for an object.
-	uploadID, err = c.findUploadID(bucketName, objectName)
+	// Initiate multipart upload for an object.
+	initMultipartUploadResult, err := c.initiateMultipartUpload(bucketName, objectName, metaData)
 	if err != nil {
-		return "", false, err
+		return "", err
 	}
-	if uploadID == "" {
-		// Initiate multipart upload for an object.
-		initMultipartUploadResult, err := c.initiateMultipartUpload(bucketName, objectName, contentType)
-		if err != nil {
-			return "", false, err
-		}
-		// Save the new upload id.
-		uploadID = initMultipartUploadResult.UploadID
-		// Indicate that this is a new upload id.
-		isNew = true
-	}
-	return uploadID, isNew, nil
+	return initMultipartUploadResult.UploadID, nil
 }
 
-// computeHash - Calculates MD5 and SHA256 for an input read Seeker.
-func (c Client) computeHash(reader io.ReadSeeker) (md5Sum, sha256Sum []byte, size int64, err error) {
-	// MD5 and SHA256 hasher.
-	var hashMD5, hashSHA256 hash.Hash
-	// MD5 and SHA256 hasher.
-	hashMD5 = md5.New()
-	hashWriter := io.MultiWriter(hashMD5)
-	if c.signature.isV4() {
-		hashSHA256 = sha256.New()
-		hashWriter = io.MultiWriter(hashMD5, hashSHA256)
+// getMpartUploadSession returns the upload id and the uploaded parts to continue a previous upload session
+// or initiate a new multipart session if no current one found
+func (c Client) getMpartUploadSession(bucketName, objectName string, metaData map[string][]string) (string, map[int]ObjectPart, error) {
+	// A map of all uploaded parts.
+	var partsInfo map[int]ObjectPart
+	var err error
+
+	uploadID, err := c.findUploadID(bucketName, objectName)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if uploadID == "" {
+		// Initiates a new multipart request
+		uploadID, err = c.newUploadID(bucketName, objectName, metaData)
+		if err != nil {
+			return "", nil, err
+		}
+	} else {
+		// Fetch previously upload parts and maximum part size.
+		partsInfo, err = c.listObjectParts(bucketName, objectName, uploadID)
+		if err != nil {
+			// When the server returns NoSuchUpload even if its previouls acknowleged the existance of the upload id,
+			// initiate a new multipart upload
+			if respErr, ok := err.(ErrorResponse); ok && respErr.Code == "NoSuchUpload" {
+				uploadID, err = c.newUploadID(bucketName, objectName, metaData)
+				if err != nil {
+					return "", nil, err
+				}
+			} else {
+				return "", nil, err
+			}
+		}
+	}
+
+	// Allocate partsInfo if not done yet
+	if partsInfo == nil {
+		partsInfo = make(map[int]ObjectPart)
+	}
+
+	return uploadID, partsInfo, nil
+}
+
+// computeHash - Calculates hashes for an input read Seeker.
+func computeHash(hashAlgorithms map[string]hash.Hash, hashSums map[string][]byte, reader io.ReadSeeker) (size int64, err error) {
+	hashWriter := ioutil.Discard
+	for _, v := range hashAlgorithms {
+		hashWriter = io.MultiWriter(hashWriter, v)
 	}
 
 	// If no buffer is provided, no need to allocate just use io.Copy.
 	size, err = io.Copy(hashWriter, reader)
 	if err != nil {
-		return nil, nil, 0, err
+		return 0, err
 	}
 
 	// Seek back reader to the beginning location.
 	if _, err := reader.Seek(0, 0); err != nil {
-		return nil, nil, 0, err
+		return 0, err
 	}
 
-	// Finalize md5shum and sha256 sum.
-	md5Sum = hashMD5.Sum(nil)
-	if c.signature.isV4() {
-		sha256Sum = hashSHA256.Sum(nil)
+	for k, v := range hashAlgorithms {
+		hashSums[k] = v.Sum(nil)
 	}
-	return md5Sum, sha256Sum, size, nil
+	return size, nil
 }
