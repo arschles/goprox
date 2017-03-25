@@ -1,55 +1,76 @@
-# GoProx
+# Goprox
 
 [![Build Status](https://travis-ci.org/arschles/goprox.svg?branch=master)](https://travis-ci.org/arschles/goprox)
 [![Go Report Card](http://goreportcard.com/badge/arschles/goprox)](http://goreportcard.com/report/arschles/goprox)
 [![Docker Repository on Quay](https://quay.io/repository/arschles/goprox/status "Docker Repository on Quay")](https://quay.io/repository/arschles/goprox)
 
-A proxy cache server for Go packages, for you to run in your own cloud.
+Goprox is a tool for managing your own Golang dependencies. Use it to:
+
+1. Curate dependencies for your whole organization
+2. Provide a server from which anyone can read and `go get` dependencies on your `GOPATH`
+3. Insulate your dependencies from changes upstream in Github/BitBucket
 
 # Alpha
-This project is alpha status. It's in early development and not all features are available, but it's ready for testing. See below for more information
+This project is alpha status. It's in early development and not all features are available.
+It is available for testing, however. See below for details.
 
-# About
+# A Proxy?
 
-GoProx is an open source Git server that proxies requests to Go packages and caches package code outside of hosted source code repositories. Since it speaks the Git protocol, popular tools like [glide](https://github.com/Masterminds/glide), [Godep](https://github.com/tools/godep), and even `go get` can talk to GoProx instead of GitHub (or others).
+Goprox is both a server and a client. The server, `goproxd`, acts as a proxy for the 
+packages under your `GOPATH` that everyone can access over the network. The client,
+`goprox` is a convenient CLI that talks to `goproxd`.
 
-The server stores and streams its git repositories on [Amazon S3](https://aws.amazon.com/s3/), and achieves slightly faster download times than [GitHub](https://github.com) in some cases. Below is an example benchmark run on the same machine with the same network connection. Note that the Kubernetes repository is approximately 316 MB.
-
-Directly from GitHub:
-
-```console
-ENG000656:Desktop aaronschlesinger$ time git clone https://github.com/kubernetes/kubernetes.git
-Cloning into 'kubernetes'...
-remote: Counting objects: 267274, done.
-remote: Compressing objects: 100% (19/19), done.
-remote: Total 267274 (delta 6), reused 2 (delta 2), pack-reused 267253
-Receiving objects: 100% (267274/267274), 191.03 MiB | 891.00 KiB/s, done.
-Resolving deltas: 100% (175363/175363), done.
-Checking connectivity... done.
-
-real	5m13.588s
-user	0m13.046s
-sys	0m7.299s
-```
-
-From a GoProx server running on [Google Container Engine](https://cloud.google.com/container-engine/) (which is in [Google Cloud](https://cloud.google.com/)):
+For example, if someone is running a `goprox` server, you execute the following command
+to `go get` [Gorilla Mux](https://godoc.org/github.com/gorilla/mux) from it:
 
 ```console
-ENG000656:k8s1 aaronschlesinger$ time git clone http://git.goprox.io/github.com/kubernetes/kubernetes
-Cloning into 'kubernetes'...
-remote: Counting objects: 260017, done.
-remote: Compressing objects: 100% (82979/82979), done.
-remote: Total 260017 (delta 170072), reused 260017 (delta 170072)
-Receiving objects: 100% (260017/260017), 187.82 MiB | 1.41 MiB/s, done.
-Resolving deltas: 100% (170072/170072), done.
-Checking connectivity... done.
-
-real	4m5.802s
-user	0m10.398s
-sys	0m6.450s
+goprox get github.com/gorilla/mux HEAD
 ```
 
-# Why It Helps
+This command does the following:
+
+- Tells `goprox` to package up the latest version (`HEAD`) of `$GOPATH/src/github.com/gorilla/mux` on its filesystem
+- Receives the package
+- Unpackages it and puts the contents into `vendor/github.com/gorilla/mux`
+
+# Install
+
+Since this project is in alpha, there are no downloadable binaries. To install it,
+you must have the following installed:
+
+1. Go 1.7+
+2. git
+3. GNU Make
+
+If you have those dependencies installed, simply clone this repository and run:
+
+```console
+make build
+```
+
+You will then have `./cmd/cli/goprox` and `./cmd/server/goproxd` binaries available.
+The former is the CLI and the latter is the server.
+
+# Why Goprox Beats `go get`
+
+As you know, `go get github.com/gorilla/mux` will download the _latest_ version of
+the code at https://github.com/gorilla/mux and install it directly into your `$GOPATH`.
+
+This approach is quick and easy, but presents the following problems:
+
+1. Your codebase may not compile later if the authors of Gorilla Mux change the code in an incompatible way
+2. Multiple Go projects might need different versions of Gorilla Mux, but there is only
+one version in the `$GOPATH`
+
+The first problem is solved by dependency management tools like 
+[Glide](https://github.com/Masterminds/glide)
+(the tool that this project uses) and [Godep](https://github.com/tools/godep).
+
+The second problem is solved by the `version` directory.
+
+
+// MODIFY THE STUFF BELOW 
+
 
 GoProx lets you control the source of your dependeny _server and code_, so regardless of what happens with the original code, you'll always have a copy in your S3 account, and you'll always be able to access it as long as you have a GoProx server running.
 
