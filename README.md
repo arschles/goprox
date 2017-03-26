@@ -99,30 +99,35 @@ will become unstable and your progress will come to a grinding halt.
 
 Let's zoom in on some specific examples of this problem:
 
-1. You depend on a version of a package in the `master`
+1. You depend on version `e406d3a` of a package on GitHub. Three weeks later, the 
+package's developer does a big `git rebase` and squashes that commit into another. 
+Since your dependency tools can't download the package at that version anymore, your builds
+break. Your only option is to somehow determine which new version is most appropriate to use
+2. You depend on a package in GitHub, and three weeks later it is deleted. Your build is broken
+and you have to hope that someone still has a copy of the package code
+3. You depended on a package in Google Code, then 
+[Google Code shut down](https://www.engadget.com/2015/03/13/google-code-closing/). Just as
+with the previous example, your build is broken and you have to hope that someone still has a
+copy of the package code. See 
+[here](https://www.reddit.com/r/golang/comments/42r1j7/codegooglecom_is_down_all_packages_hosted_there) 
+for more details on how that shutdown affect Go projects specifically
 
+# Why Not Check In Your `vendor` directory?
 
-// MODIFY THE STUFF BELOW 
+If you're looking to fix the issues above, you could just check in your vendor directory!
+Nobody who builds your code will need to download any dependency management tools (Glide, Godep,
+etc...), nor will you risk your build breaking _because you will have no external 
+dependencies_. Every dependency you need will be in your repository forever.
 
+However, you'll eventually need to upgrade the code in your vendor directory, and then you're
+faced once again with the problems listed in the previous section.
 
-GoProx lets you control the source of your dependeny _server and code_, so regardless of what happens with the original code, you'll always have a copy in your S3 account, and you'll always be able to access it as long as you have a GoProx server running.
+Additionally, if you are writing a library yourself, or it's possible that someone might
+`import` your library, they themselves will run into problems importing and using _your_
+package. See [this thread](https://groups.google.com/forum/#!msg/golang-nuts/AnMr9NL6dtc/UnyUUKcMCAAJ) for more 
+detail on why this is the case.
 
-Since it's not a shared server, database or code repository, you don't need to rely on a third party to serve or store your dependencies for you. Instead, you maintain the server and store dependencies in S3. As a result, uptime is determined by S3 and you (or the operators of your goprox server install).
-
-# Problems It Solves
-
-Not relying on third parties to hold your dependency code for you is important, given how Go dependency management works.
-
-All the tools we have today for tracking, managing and/or fetching Go dependencies download raw Go code or metadata directly from GitHub and other popular source code repos.
-
-This method is simple and very effective, but it comes with some pitfalls:
-
-1. If the hosted repo is unavailable, your build won't have access to required dependencies and it will fail
-2. If the author of a library you depend on modifies a tag or a commit, the code you depended on may change or disappear
-
-The above two pitfalls aren't just theoretical either.
-
-Downtime happens for all repositories, but Google Code has shut down and it had a [big impact](https://www.reddit.com/r/golang/comments/42r1j7/codegooglecom_is_down_all_packages_hosted_there/) on the Go community at large. To a project that depended on a `code.google.com` package, it looked like the dependency was deleted. The Google Code shutdown was a big inspiration for me to build GoProx.
+# REMAINDER STUFF - MODIFY OR REMOVE
 
 (note that even in other languages these problems exist. The node.js community had a big [issue](http://blog.npmjs.org/post/141577284765/kik-left-pad-and-npm) when someone deleted a small package that was very "deep" in many large dependency trees)
 
