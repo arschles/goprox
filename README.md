@@ -66,7 +66,34 @@ The first problem is solved by dependency management tools like
 [Glide](https://github.com/Masterminds/glide)
 (the tool that this project uses) and [Godep](https://github.com/tools/godep).
 
-The second problem is solved by the `version` directory.
+The second problem is solved by the
+[`vendor` folder](https://blog.gopheracademy.com/advent-2015/vendor-folder/). 
+If you're unfamiliar with how the `vendor` folder works, here is a brief overview:
+
+- The `go` toolchain will look for a directory called `vendor` in the current directory as well
+as the directories above the current directory
+- The toolchain will look for dependencies in the `vendor` directory _first_, before
+looking in the `$GOPATH`
+- That fact means that you can "freeze" a dependency package's version for just your
+project, without changing any other part of the `$GOPATH`
+- Your project still has to be in the `$GOPATH`
+- In most cases, Go projects put a single vendor directory at the project root
+- The aforementioned tools (Glide and Godep) -- and others -- can automatically manage
+your `vendor` directory for you
+
+So, we already have tools to solve both of the above problems, so why do we need another?
+
+# Why Goprox Beats Glide, Godep and Other Tools
+
+There is no central package repository for Go dependencies, nor is there a "package format" 
+like [Java's JAR](https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jarGuide.html)
+or [Rust's Crates](http://doc.crates.io/guide.html).
+
+So, in order for these tools to fetch a dependency for use in your project, they have to
+go to the source control repository -- Github in most cases -- and download the code.
+
+That means that the released packages -- the code you depend on -- lives in the same place
+as in-development code. That arrangement can cause problems long-term in a few ways:
 
 
 // MODIFY THE STUFF BELOW 
