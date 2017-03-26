@@ -93,7 +93,13 @@ So, in order for these tools to fetch a dependency for use in your project, they
 go to the source control repository -- Github in most cases -- and download the code.
 
 That means that the released packages -- the code you depend on -- lives in the same place
-as in-development code. That arrangement can cause problems long-term in a few ways:
+as in-development code. That's a fundamental problem, because development, or "bleeding edge"
+code is meant to change over time, but your dependencies can't. If they did, your build
+will become unstable and your progress will come to a grinding halt.
+
+Let's zoom in on some specific examples of this problem:
+
+1. You depend on a version of a package in the `master`
 
 
 // MODIFY THE STUFF BELOW 
