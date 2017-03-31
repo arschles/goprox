@@ -1,85 +1,128 @@
-# GoProx
+# Goprox
 
 [![Build Status](https://travis-ci.org/arschles/goprox.svg?branch=master)](https://travis-ci.org/arschles/goprox)
 [![Go Report Card](http://goreportcard.com/badge/arschles/goprox)](http://goreportcard.com/report/arschles/goprox)
 [![Docker Repository on Quay](https://quay.io/repository/arschles/goprox/status "Docker Repository on Quay")](https://quay.io/repository/arschles/goprox)
 
-A proxy cache server for Go packages, for you to run in your own cloud.
+Goprox is a tool for managing your own Golang dependencies. Use it to:
+
+1. Curate dependencies for your whole organization
+2. Provide a server from which anyone can read and `go get` dependencies on your `GOPATH`
+3. Insulate your dependencies from changes upstream in Github/BitBucket
 
 # Alpha
-This project is alpha status. It's in early development and not all features are available, but it's ready for testing. See below for more information
+This project is alpha status. It's in early development and not all features are available.
+It is available for testing, however. See below for details.
 
-# About
+# A Proxy?
 
-GoProx is an open source Git server that proxies requests to Go packages and caches package code outside of hosted source code repositories. Since it speaks the Git protocol, popular tools like [glide](https://github.com/Masterminds/glide), [Godep](https://github.com/tools/godep), and even `go get` can talk to GoProx instead of GitHub (or others).
+Goprox is both a server and a client. The server, `goproxd`, acts as a proxy for the 
+packages under your `GOPATH` that everyone can access over the network. The client,
+`goprox` is a convenient CLI that talks to `goproxd`.
 
-The server stores and streams its git repositories on [Amazon S3](https://aws.amazon.com/s3/), and achieves slightly faster download times than [GitHub](https://github.com) in some cases. Below is an example benchmark run on the same machine with the same network connection. Note that the Kubernetes repository is approximately 316 MB.
-
-Directly from GitHub:
-
-```console
-ENG000656:Desktop aaronschlesinger$ time git clone https://github.com/kubernetes/kubernetes.git
-Cloning into 'kubernetes'...
-remote: Counting objects: 267274, done.
-remote: Compressing objects: 100% (19/19), done.
-remote: Total 267274 (delta 6), reused 2 (delta 2), pack-reused 267253
-Receiving objects: 100% (267274/267274), 191.03 MiB | 891.00 KiB/s, done.
-Resolving deltas: 100% (175363/175363), done.
-Checking connectivity... done.
-
-real	5m13.588s
-user	0m13.046s
-sys	0m7.299s
-```
-
-From a GoProx server running on [Google Container Engine](https://cloud.google.com/container-engine/) (which is in [Google Cloud](https://cloud.google.com/)):
+For example, if someone is running a `goprox` server, you execute the following command
+to `go get` [Gorilla Mux](https://godoc.org/github.com/gorilla/mux) from it:
 
 ```console
-ENG000656:k8s1 aaronschlesinger$ time git clone http://git.goprox.io/github.com/kubernetes/kubernetes
-Cloning into 'kubernetes'...
-remote: Counting objects: 260017, done.
-remote: Compressing objects: 100% (82979/82979), done.
-remote: Total 260017 (delta 170072), reused 260017 (delta 170072)
-Receiving objects: 100% (260017/260017), 187.82 MiB | 1.41 MiB/s, done.
-Resolving deltas: 100% (170072/170072), done.
-Checking connectivity... done.
-
-real	4m5.802s
-user	0m10.398s
-sys	0m6.450s
+goprox get github.com/gorilla/mux HEAD
 ```
 
-# Why It Helps
+This command does the following:
 
-GoProx lets you control the source of your dependeny _server and code_, so regardless of what happens with the original code, you'll always have a copy in your S3 account, and you'll always be able to access it as long as you have a GoProx server running.
+- Tells `goprox` to package up the latest version (`HEAD`) of `$GOPATH/src/github.com/gorilla/mux` on its filesystem
+- Receives the package
+- Unpackages it and puts the contents into `vendor/github.com/gorilla/mux`
 
-Since it's not a shared server, database or code repository, you don't need to rely on a third party to serve or store your dependencies for you. Instead, you maintain the server and store dependencies in S3. As a result, uptime is determined by S3 and you (or the operators of your goprox server install).
+# Install
 
-# Problems It Solves
+Since this project is in alpha, there are no downloadable binaries. To install it,
+you must have the following installed:
 
-Not relying on third parties to hold your dependency code for you is important, given how Go dependency management works.
+1. Go 1.7+
+2. git
+3. GNU Make
 
-All the tools we have today for tracking, managing and/or fetching Go dependencies download raw Go code or metadata directly from GitHub and other popular source code repos.
+If you have those dependencies installed, simply clone this repository and run:
 
-This method is simple and very effective, but it comes with some pitfalls:
+```console
+make build
+```
 
-1. If the hosted repo is unavailable, your build won't have access to required dependencies and it will fail
-2. If the author of a library you depend on modifies a tag or a commit, the code you depended on may change or disappear
+You will then have `./cmd/cli/goprox` and `./cmd/server/goproxd` binaries available.
+The former is the CLI and the latter is the server.
 
-The above two pitfalls aren't just theoretical either.
+# Why Goprox Beats `go get`
 
-Downtime happens for all repositories, but Google Code has shut down and it had a [big impact](https://www.reddit.com/r/golang/comments/42r1j7/codegooglecom_is_down_all_packages_hosted_there/) on the Go community at large. To a project that depended on a `code.google.com` package, it looked like the dependency was deleted. The Google Code shutdown was a big inspiration for me to build GoProx.
+As you know, `go get github.com/gorilla/mux` will download the _latest_ version of
+the code at https://github.com/gorilla/mux and install it directly into your `$GOPATH`.
 
-(note that even in other languages these problems exist. The node.js community had a big [issue](http://blog.npmjs.org/post/141577284765/kik-left-pad-and-npm) when someone deleted a small package that was very "deep" in many large dependency trees)
+This approach is quick and easy, but presents the following problems:
 
-## Example Scenario
+1. Your codebase may not compile later if the authors of Gorilla Mux change the code in an incompatible way
+2. Multiple Go projects might need different versions of Gorilla Mux, but there is only
+one version in the `$GOPATH`
 
-Let's imagine a scenario that shows how relying on third party repositories can be harmful to your project, and then show how GoProx can help.
+The first problem is solved by dependency management tools like 
+[Glide](https://github.com/Masterminds/glide)
+(the tool that this project uses) and [Godep](https://github.com/tools/godep).
 
-Say your project depends on a (fictional) package of mine called `github.com/arschles/gofictional`. You use [glide](https://github.com/Masterminds/glide), so you get repeatable, deterministic builds because you've pinned your version of that package to a known Git SHA.
+The second problem is solved by the
+[`vendor` folder](https://blog.gopheracademy.com/advent-2015/vendor-folder/). 
+If you're unfamiliar with how the `vendor` folder works, here is a brief overview:
 
-One day, I update my package, squash it into the commit SHA that you depend on and push the update to my `master` branch. This means that next time you pull dependencies (for example, in your CI system), your project will build with my new update.
+- The `go` toolchain will look for a directory called `vendor` in the current directory as well
+as the directories above the current directory
+- The toolchain will look for dependencies in the `vendor` directory _first_, before
+looking in the `$GOPATH`
+- That fact means that you can "freeze" a dependency package's version for just your
+project, without changing any other part of the `$GOPATH`
+- Your project still has to be in the `$GOPATH`
+- In most cases, Go projects put a single vendor directory at the project root
+- The aforementioned tools (Glide and Godep) -- and others -- can automatically manage
+your `vendor` directory for you
 
-At best, your code won't build, but at worst your tests won't catch the change and you'll ship fundamentally different software without knowing it.
+So, we already have tools to solve both of the above problems, so why do we need another?
 
-If you change the dependency's source to use GoProx, you'll be effectively pulling the code from your S3 bucket, not from GitHub. Even though I squashed commits into the original SHA, the code GoProx will serve won't have it. If you decide to use the updated code, you can tell GoProx to update its cache.
+# Why Goprox Beats Glide, Godep and Other Tools
+
+There is no central package repository for Go dependencies, nor is there a "package format" 
+like [Java's JAR](https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jarGuide.html)
+or [Rust's Crates](http://doc.crates.io/guide.html).
+
+So, in order for these tools to fetch a dependency for use in your project, they have to
+go to the source control repository -- Github in most cases -- and download the code.
+
+That means that the released packages -- the code you depend on -- lives in the same place
+as in-development code. That's a fundamental problem, because development, or "bleeding edge"
+code is meant to change over time, but your dependencies can't. If they did, your build
+will become unstable and your progress will come to a grinding halt.
+
+Let's zoom in on some specific examples of this problem:
+
+1. You depend on version `e406d3a` of a package on GitHub. Three weeks later, the 
+package's developer does a big `git rebase` and squashes that commit into another. 
+Since your dependency tools can't download the package at that version anymore, your builds
+break. Your only option is to somehow determine which new version is most appropriate to use
+2. You depend on a package in GitHub, and three weeks later it is deleted. Your build is broken
+and you have to hope that someone still has a copy of the package code
+3. You depended on a package in Google Code, then 
+[Google Code shut down](https://www.engadget.com/2015/03/13/google-code-closing/). Just as
+with the previous example, your build is broken and you have to hope that someone still has a
+copy of the package code. See 
+[here](https://www.reddit.com/r/golang/comments/42r1j7/codegooglecom_is_down_all_packages_hosted_there) 
+for more details on how that shutdown affect Go projects specifically
+
+# Why Not Check In Your `vendor` directory?
+
+If you're looking to fix the issues above, you could just check in your vendor directory!
+Nobody who builds your code will need to download any dependency management tools (Glide, Godep,
+etc...), nor will you risk your build breaking _because you will have no external 
+dependencies_. Every dependency you need will be in your repository forever.
+
+However, you'll eventually need to upgrade the code in your vendor directory, and then you're
+faced once again with the problems listed in the previous section.
+
+Additionally, if you are writing a library yourself, or it's possible that someone might
+`import` your library, they themselves will run into problems importing and using _your_
+package. See [this thread](https://groups.google.com/forum/#!msg/golang-nuts/AnMr9NL6dtc/UnyUUKcMCAAJ) for more 
+detail on why this is the case.
