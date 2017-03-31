@@ -123,6 +123,6 @@ However, you'll eventually need to upgrade the code in your vendor directory, an
 faced once again with the problems listed in the previous section.
 
 Additionally, if you are writing a library yourself, or it's possible that someone might
-`import` your library, they themselves will run into problems importing and using _your_
+`import` your code in the future, they themselves will run into problems importing and using _your_
 package. See [this thread](https://groups.google.com/forum/#!msg/golang-nuts/AnMr9NL6dtc/UnyUUKcMCAAJ) for more 
 detail on why this is the case.
