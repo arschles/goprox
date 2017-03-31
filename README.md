@@ -126,19 +126,3 @@ Additionally, if you are writing a library yourself, or it's possible that someo
 `import` your library, they themselves will run into problems importing and using _your_
 package. See [this thread](https://groups.google.com/forum/#!msg/golang-nuts/AnMr9NL6dtc/UnyUUKcMCAAJ) for more 
 detail on why this is the case.
-
-# REMAINDER STUFF - MODIFY OR REMOVE
-
-(note that even in other languages these problems exist. The node.js community had a big [issue](http://blog.npmjs.org/post/141577284765/kik-left-pad-and-npm) when someone deleted a small package that was very "deep" in many large dependency trees)
-
-## Example Scenario
-
-Let's imagine a scenario that shows how relying on third party repositories can be harmful to your project, and then show how GoProx can help.
-
-Say your project depends on a (fictional) package of mine called `github.com/arschles/gofictional`. You use [glide](https://github.com/Masterminds/glide), so you get repeatable, deterministic builds because you've pinned your version of that package to a known Git SHA.
-
-One day, I update my package, squash it into the commit SHA that you depend on and push the update to my `master` branch. This means that next time you pull dependencies (for example, in your CI system), your project will build with my new update.
-
-At best, your code won't build, but at worst your tests won't catch the change and you'll ship fundamentally different software without knowing it.
-
-If you change the dependency's source to use GoProx, you'll be effectively pulling the code from your S3 bucket, not from GitHub. Even though I squashed commits into the original SHA, the code GoProx will serve won't have it. If you decide to use the updated code, you can tell GoProx to update its cache.
